@@ -1,11 +1,11 @@
-﻿using IRCSharp.Entities;
-using IRCSharp.EventArgs;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
+using IRCSharp.Entities;
+using IRCSharp.EventArgs;
 
 namespace IRCSharp
 {
@@ -69,7 +69,7 @@ namespace IRCSharp
             Send($"NICK {Configuration.Username}");
             Send($"USER {Configuration.Identd} 0 * :{Configuration.RealName}");
 
-            new Thread(() => 
+            new Thread(() =>
             {
                 using (var reader = new StreamReader(_tcp.GetStream()))
                 {
@@ -188,6 +188,10 @@ namespace IRCSharp
             }
         }
 
+        /// <summary>
+        ///     Sends the specified <see cref="string"/> to the server.
+        /// </summary>
+        /// <param name="data">Content to send.</param>
         public void Send(string data)
         {
             _writer.WriteLine(data);

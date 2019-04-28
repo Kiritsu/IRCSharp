@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IRCSharp.EventArgs
+﻿namespace IRCSharp.EventArgs
 {
-    public class ReadyEventArgs : EventArgs
+    public sealed class ReadyEventArgs : EventArgs
     {
+        internal ReadyEventArgs()
+        {
 
+        }
     }
 }
