@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using IRCSharp.Entities;
+using IRCSharp.Entities.Enums;
+using IRCSharp.Entities.Models;
 using IRCSharp.EventArgs;
 
 namespace IRCSharp
@@ -16,6 +18,7 @@ namespace IRCSharp
         private readonly TcpClient _tcp;
 
         private readonly ConcurrentDictionary<string, User> _cachedUsers;
+        private readonly ConcurrentDictionary<string, Channel> _cachedChannels;
 
         private event Action<string> DataReceived;
 
@@ -50,6 +53,7 @@ namespace IRCSharp
 
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
+            _cachedChannels = new ConcurrentDictionary<string, Channel>();
         }
 
         /// <summary>
@@ -183,6 +187,136 @@ namespace IRCSharp
                             user.Signon = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
                         }
 
+                        return;
+                    }
+
+                case 338:
+                    {
+                        if (_cachedUsers.TryGetValue(data[2], out var user))
+                        {
+                            user.ReverseIp = data[3];
+                            user.Ip = data[4];
+                        }
+
+                        return;
+                    }
+
+                case 332:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[2], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = data[2]
+                            };
+
+                            _cachedChannels.TryAdd(data[2], channel);
+                        }
+
+                        channel.Topic = new Topic
+                        {
+                            Content = content
+                        };
+
+                        return;
+                    }
+
+                case 333:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[2], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = data[2]
+                            };
+
+                            _cachedChannels.TryAdd(data[2], channel);
+                        }
+
+                        channel.Topic.Author = data[3];
+                        channel.Topic.ModifiedAt = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
+
+                        return;
+                    }
+
+                case 353:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[3], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = data[3]
+                            };
+
+                            _cachedChannels.TryAdd(data[3], channel);
+                        }
+
+                        var users = content.Split(' ');
+                        foreach (var u in users)
+                        {
+                            var name = u.Substring(1);
+                            if (!_cachedUsers.TryGetValue(name, out var user))
+                            {
+                                user = new User { Username = name };
+                                _cachedUsers.TryAdd(name, user);
+                            }
+
+                            user._channels.Add(channel);
+
+                            var channelUser = new ChannelUser(user);
+
+                            switch (u[0])
+                            {
+                                case '+':
+                                    channelUser.Privileges = ChannelPrivilege.Voice;
+                                    break;
+                                case '@':
+                                    channelUser.Privileges = ChannelPrivilege.Operator;
+                                    break;
+                                default:
+                                    channelUser.Privileges = ChannelPrivilege.Unknown;
+                                    break;
+                            }
+
+                            channel._users.Add(channelUser);
+                        }
+
+                        return;
+                    }
+
+                case 324:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[2], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = data[2]
+                            };
+
+                            _cachedChannels.TryAdd(data[2], channel);
+                        }
+
+                        if (data[3].Length > 1)
+                        {
+                            channel._modes.AddRange(data[3].Substring(1));
+                        }
+
+                        return;
+                    }
+
+                case 329:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[2], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = data[2]
+                            };
+
+                            _cachedChannels.TryAdd(data[2], channel);
+                        }
+
+                        channel.CreatedAt = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[3]));
                         return;
                     }
             }

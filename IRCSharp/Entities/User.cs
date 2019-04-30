@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace IRCSharp.Entities
 {
@@ -49,9 +51,27 @@ namespace IRCSharp.Entities
         /// </summary>
         public bool IRCOperator { get; internal set; }
 
+        /// <summary>
+        ///     Host of the user.
+        /// </summary>
+        public string ReverseIp { get; internal set; }
+
+        /// <summary>
+        ///     Ip of the user.
+        /// </summary>
+        public string Ip { get; internal set; }
+
+        /// <summary>
+        ///     Channels of the user.
+        /// </summary>
+        public ReadOnlyCollection<Channel> Channels { get; }
+
+        internal readonly List<Channel> _channels;
+
         internal User()
         {
-
+            _channels = new List<Channel>();
+            Channels = new ReadOnlyCollection<Channel>(_channels);
         }
     }
 }
