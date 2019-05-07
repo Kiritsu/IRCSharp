@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace IRCSharp.Entities
 {
-    public class User
+    public class User : IEquatable<User>
     {
         /// <summary>
         ///     Identd of the <see cref="User"/>.
@@ -84,12 +84,21 @@ namespace IRCSharp.Entities
         /// <param name="obj">Object to compare.</param>
         public override bool Equals(object obj)
         {
-            if (obj is User user)
+            return Equals(obj as User);
+        }
+
+        /// <summary>
+        ///     Checks wether the given object is equal to the <see cref="User"/>.
+        /// </summary>
+        /// <param name="obj">Object to compare.</param>
+        public bool Equals(User user)
+        {
+            if (user is null)
             {
-                return user.Username == Username;
+                return false;
             }
 
-            return false;
+            return user.Username == Username;
         }
 
         /// <summary>

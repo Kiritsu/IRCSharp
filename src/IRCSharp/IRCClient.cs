@@ -44,6 +44,16 @@ namespace IRCSharp
         public event Action<ReadyEventArgs> Ready;
 
         /// <summary>
+        ///     Fires when a user has joined a channel.
+        /// </summary>
+        public event Action<UserJoinedEventArgs> UserJoined;
+
+        /// <summary>
+        ///     Fires when a user has left a channel.
+        /// </summary>
+        public event Action<UserLeftEventArgs> UserLeft;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -145,7 +155,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(content[1], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = content[1]
                             };
@@ -153,9 +163,10 @@ namespace IRCSharp
                             _cachedChannels.TryAdd(content[1], channel);
                         }
 
+                        var channelUser = new ChannelUser(this, user, channel);
                         if (!channel._users.Any(x => x == user))
                         {
-                            channel._users.Add(new ChannelUser(this, user, channel));
+                            channel._users.Add(channelUser);
                         }
 
                         if (!user._channels.Any(x => x == channel))
@@ -163,10 +174,52 @@ namespace IRCSharp
                             user._channels.Add(channel);
                         }
 
+                        UserJoined?.Invoke(new UserJoinedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Channel = channel,
+                            User = channelUser
+                        });
+
                         return;
                     }
                 case "PART":
                     {
+                        var channelName = content[1];
+                        if (channelName.StartsWith(':'))
+                        {
+                            channelName = channelName.Substring(1);
+                        }
+
+                        if (!_cachedChannels.TryGetValue(channelName, out var channel))
+                        {
+                            channel = new Channel(this)
+                            {
+                                Name = content[1]
+                            };
+
+                            _cachedChannels.TryAdd(content[1], channel);
+                        }
+
+                        if (user._channels.Any(x => x == channel))
+                        {
+                            user._channels.Remove(channel);
+                        }
+
+                        if (channel._users.Any(x => x == user))
+                        {
+                            channel._users.Remove(channel._users.FirstOrDefault(x => x == user));
+                        }
+
+                        UserLeft?.Invoke(new UserLeftEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Channel = channel,
+                            User = user
+                        });
+
                         return;
                     }
                 case "QUIT":
@@ -220,7 +273,7 @@ namespace IRCSharp
                     {
                         if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user = new User(this);
+                            user = new User(this) { Username = data[2] };
                             _cachedUsers.TryAdd(data[2], user);
                         }
 
@@ -234,42 +287,54 @@ namespace IRCSharp
 
                 case 312:
                     {
-                        if (_cachedUsers.TryGetValue(data[2], out var user))
+                        if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user.Server = data[3];
+                            user = new User(this) { Username = data[2] };
+                            _cachedUsers.TryAdd(data[2], user);
                         }
+
+                        user.Server = data[3];
 
                         return;
                     }
 
                 case 313:
                     {
-                        if (_cachedUsers.TryGetValue(data[2], out var user))
+                        if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user.IRCOperator = true;
+                            user = new User(this) { Username = data[2] };
+                            _cachedUsers.TryAdd(data[2], user);
                         }
+
+                        user.IRCOperator = true;
 
                         return;
                     }
 
                 case 317:
                     {
-                        if (_cachedUsers.TryGetValue(data[2], out var user))
+                        if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user.Idle = TimeSpan.FromSeconds(int.Parse(data[3]));
-                            user.Signon = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
+                            user = new User(this) { Username = data[2] };
+                            _cachedUsers.TryAdd(data[2], user);
                         }
+
+                        user.Idle = TimeSpan.FromSeconds(int.Parse(data[3]));
+                        user.Signon = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
 
                         return;
                     }
 
                 case 338:
                     {
-                        if (_cachedUsers.TryGetValue(data[2], out var user))
+                        if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user.ReverseIp = data[3];
-                            user.Ip = data[4];
+                            user = new User(this) { Username = data[2] };
+                            _cachedUsers.TryAdd(data[2], user);
                         }
+
+                        user.ReverseIp = data[3];
+                        user.Ip = data[4];
 
                         return;
                     }
@@ -278,7 +343,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(data[2], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = data[2]
                             };
@@ -298,7 +363,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(data[2], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = data[2]
                             };
@@ -316,7 +381,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(data[3], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = data[3]
                             };
@@ -334,7 +399,10 @@ namespace IRCSharp
                                 _cachedUsers.TryAdd(name, user);
                             }
 
-                            user._channels.Add(channel);
+                            if (!user._channels.Contains(channel))
+                            {
+                                user._channels.Add(channel);
+                            }
 
                             var channelUser = new ChannelUser(this, user, channel);
 
@@ -347,11 +415,14 @@ namespace IRCSharp
                                     channelUser.Privileges = ChannelPrivilege.Operator;
                                     break;
                                 default:
-                                    channelUser.Privileges = ChannelPrivilege.Normal | ChannelPrivilege.Unknown;
+                                    channelUser.Privileges = ChannelPrivilege.Unknown;
                                     break;
                             }
 
-                            channel._users.Add(channelUser);
+                            if (!channel._users.Contains(channelUser))
+                            {
+                                channel._users.Add(channelUser);
+                            }
                         }
 
                         return;
@@ -361,7 +432,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(data[2], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = data[2]
                             };
@@ -371,6 +442,7 @@ namespace IRCSharp
 
                         if (data[3].Length > 1)
                         {
+                            channel._modes.Clear();
                             channel._modes.AddRange(data[3].Substring(1));
                         }
 
@@ -381,7 +453,7 @@ namespace IRCSharp
                     {
                         if (!_cachedChannels.TryGetValue(data[2], out var channel))
                         {
-                            channel = new Channel
+                            channel = new Channel(this)
                             {
                                 Name = data[2]
                             };
@@ -390,6 +462,65 @@ namespace IRCSharp
                         }
 
                         channel.CreatedAt = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[3]));
+                        return;
+                    }
+
+                case 319:
+                    {
+                        if (!_cachedUsers.TryGetValue(data[2], out var user))
+                        {
+                            user = new User(this) { Username = data[2] };
+                            _cachedUsers.TryAdd(data[2], user);
+                        }
+
+                        user._channels.Clear();
+                        var channels = content.Split(' ');
+                        foreach (var chan in channels)
+                        {
+                            var name = chan.Substring(chan.IndexOf("#"));
+                            if (!_cachedChannels.TryGetValue(name, out var channel))
+                            {
+                                channel = new Channel(this)
+                                {
+                                    Name = name
+                                };
+
+                                _cachedChannels.TryAdd(name, channel);
+                            }
+
+                            ChannelUser channelUser;
+                            if (!channel._users.Contains(user))
+                            {
+                                channelUser = new ChannelUser(this, user, channel);
+                                channel._users.Add(channelUser);
+                            }
+                            else
+                            {
+                                channelUser = channel._users.FirstOrDefault(x => x == user);
+                            }
+
+                            if (!user._channels.Contains(channel))
+                            {
+                                user._channels.Add(channel);
+                            }
+
+                            switch (chan[0])
+                            {
+                                case '#':
+                                    channelUser.Privileges = ChannelPrivilege.Normal;
+                                    break;
+                                case '@':
+                                    channelUser.Privileges = ChannelPrivilege.Operator;
+                                    break;
+                                case '+':
+                                    channelUser.Privileges = ChannelPrivilege.Voice;
+                                    break;
+                                default:
+                                    channelUser.Privileges = ChannelPrivilege.Unknown;
+                                    break;
+                            }
+                        }
+
                         return;
                     }
             }
