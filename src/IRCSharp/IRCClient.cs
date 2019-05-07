@@ -54,6 +54,11 @@ namespace IRCSharp
         public event Action<UserLeftEventArgs> UserLeft;
 
         /// <summary>
+        ///     Fires when a user quit.
+        /// </summary>
+        public event Action<UserQuitEventArgs> UserQuit;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -217,13 +222,31 @@ namespace IRCSharp
                             Client = this,
                             CurrentUser = CurrentUser,
                             Channel = channel,
-                            User = user
+                            User = user,
+                            Reason = content.Length > 2 ? data.Substring(data.IndexOf(':') + 1) : ""
                         });
 
                         return;
                     }
                 case "QUIT":
                     {
+                        _cachedUsers.TryRemove(username, out _);
+
+                        var reason = "";
+                        var idof = data.IndexOf(':');
+                        if (idof != -1)
+                        {
+                            reason = data.Substring(idof + 1);
+                        }
+
+                        UserQuit?.Invoke(new UserQuitEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            User = user,
+                            Reason = reason
+                        });
+
                         return;
                     }
                 case "NICK":
@@ -231,6 +254,10 @@ namespace IRCSharp
                         return;
                     }
                 case "PRIVMSG":
+                    {
+                        return;
+                    }
+                case "MODE":
                     {
                         return;
                     }

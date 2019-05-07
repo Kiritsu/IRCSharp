@@ -2,7 +2,7 @@
 
 namespace IRCSharp.EventArgs
 {
-    public class UserLeftEventArgs : EventArgs
+    public class UserQuitEventArgs : EventArgs
     {
         /// <summary>
         ///     User that left the channel.
@@ -10,16 +10,11 @@ namespace IRCSharp.EventArgs
         public User User { get; internal set; }
 
         /// <summary>
-        ///     Channel on which the user left.
-        /// </summary>
-        public Channel Channel { get; internal set; }
-
-        /// <summary>
-        ///     Reason why the user left the channel. Empty if not specified.
+        ///     Reason why the user quit IRC. Empty if not specified.
         /// </summary>
         public string Reason { get; internal set; }
 
-        internal UserLeftEventArgs()
+        internal UserQuitEventArgs()
         {
 
         }
