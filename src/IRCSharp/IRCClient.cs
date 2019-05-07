@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -20,7 +21,22 @@ namespace IRCSharp
         private readonly ConcurrentDictionary<string, User> _cachedUsers;
         private readonly ConcurrentDictionary<string, Channel> _cachedChannels;
 
-        private event Action<string> DataReceived;
+        internal readonly IRCConfiguration _configuration;
+
+        /// <summary>
+        ///     Gets the cached <see cref="User"/>s.
+        /// </summary>
+        public ReadOnlyDictionary<string, User> CachedUsers { get; }
+
+        /// <summary>
+        ///     Gets the cached <see cref="Channel"/>s.
+        /// </summary>
+        public ReadOnlyDictionary<string, Channel> CachedChannels { get; }
+
+        /// <summary>
+        ///     Fires when data is received.
+        /// </summary>
+        public event Action<string> DataReceived;
 
         /// <summary>
         ///     Fires when the client is connected and authenticated to the remote server.
@@ -38,18 +54,13 @@ namespace IRCSharp
         public User CurrentUser { get; private set; }
 
         /// <summary>
-        ///     Configuration of this <see cref="IRCClient"/>.
-        /// </summary>
-        public IRCConfiguration Configuration { get; }
-
-        /// <summary>
         ///     Creates a new <see cref="IRCClient"/>.
         /// </summary>
         public IRCClient(IRCConfiguration configuration)
         {
             DataReceived += OnDataReceived;
 
-            Configuration = new IRCConfiguration(configuration);
+            _configuration = new IRCConfiguration(configuration);
 
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
@@ -61,17 +72,17 @@ namespace IRCSharp
         /// </summary>
         public void Connect()
         {
-            _tcp.Connect(Configuration.Hostname, Configuration.Port);
+            _tcp.Connect(_configuration.Hostname, _configuration.Port);
             _writer = new StreamWriter(_tcp.GetStream());
 
             //Sending authentication.
-            if (!string.IsNullOrWhiteSpace(Configuration.Password))
+            if (!string.IsNullOrWhiteSpace(_configuration.Password))
             {
-                Send($"PASS {Configuration.Password}");
+                Send($"PASS {_configuration.Password}");
             }
 
-            Send($"NICK {Configuration.Username}");
-            Send($"USER {Configuration.Identd} 0 * :{Configuration.RealName}");
+            Send($"NICK {_configuration.Username}");
+            Send($"USER {_configuration.Identd} 0 * :{_configuration.RealName}");
 
             new Thread(() =>
             {
@@ -105,9 +116,71 @@ namespace IRCSharp
                 var sender = content[0].Substring(1);
                 if (!sender.Contains("!") && !sender.Contains("@"))
                 {
-                    Configuration.Host = sender;
+                    _configuration.Host = sender;
                     HandleServerData(content.Skip(1).ToArray(), data);
                 }
+                else
+                {
+                    HandleUserData(sender, content.Skip(1).ToArray(), data);
+                }
+            }
+        }
+
+        private void HandleUserData(string sender, string[] content, string data)
+        {
+            var username = sender.Substring(0, sender.IndexOf('!'));
+            if (!_cachedUsers.TryGetValue(username, out var user))
+            {
+                user = new User(this)
+                {
+                    Username = username
+                };
+
+                _cachedUsers.TryAdd(username, user);
+            }
+
+            switch (content[0])
+            {
+                case "JOIN":
+                    {
+                        if (!_cachedChannels.TryGetValue(content[1], out var channel))
+                        {
+                            channel = new Channel
+                            {
+                                Name = content[1]
+                            };
+
+                            _cachedChannels.TryAdd(content[1], channel);
+                        }
+
+                        if (!channel._users.Any(x => x == user))
+                        {
+                            channel._users.Add(new ChannelUser(this, user, channel));
+                        }
+
+                        if (!user._channels.Any(x => x == channel))
+                        {
+                            user._channels.Add(channel);
+                        }
+
+                        return;
+                    }
+                case "PART":
+                    {
+                        return;
+                    }
+                case "QUIT":
+                    {
+                        return;
+                    }
+                case "NICK":
+                    {
+                        return;
+                    }
+                case "PRIVMSG":
+                    {
+                        return;
+                    }
             }
         }
 
@@ -127,7 +200,7 @@ namespace IRCSharp
                 case 1:
                     Connected = true;
 
-                    CurrentUser = new User
+                    CurrentUser = new User(this)
                     {
                         Username = username,
                     };
@@ -140,14 +213,14 @@ namespace IRCSharp
                         CurrentUser = CurrentUser
                     });
 
-                    Send($"WHOIS {Configuration.Host ?? username} {username}");
+                    Send($"WHOIS {_configuration.Host ?? username} {username}");
                     break;
 
                 case 311:
                     {
                         if (!_cachedUsers.TryGetValue(data[2], out var user))
                         {
-                            user = new User();
+                            user = new User(this);
                             _cachedUsers.TryAdd(data[2], user);
                         }
 
@@ -257,13 +330,13 @@ namespace IRCSharp
                             var name = u.Substring(1);
                             if (!_cachedUsers.TryGetValue(name, out var user))
                             {
-                                user = new User { Username = name };
+                                user = new User(this) { Username = name };
                                 _cachedUsers.TryAdd(name, user);
                             }
 
                             user._channels.Add(channel);
 
-                            var channelUser = new ChannelUser(user);
+                            var channelUser = new ChannelUser(this, user, channel);
 
                             switch (u[0])
                             {
@@ -274,7 +347,7 @@ namespace IRCSharp
                                     channelUser.Privileges = ChannelPrivilege.Operator;
                                     break;
                                 default:
-                                    channelUser.Privileges = ChannelPrivilege.Unknown;
+                                    channelUser.Privileges = ChannelPrivilege.Normal | ChannelPrivilege.Unknown;
                                     break;
                             }
 

@@ -1,4 +1,6 @@
-﻿using IRCSharp.Entities.Enums;
+﻿using System;
+using System.Collections.ObjectModel;
+using IRCSharp.Entities.Enums;
 
 namespace IRCSharp.Entities
 {
@@ -9,19 +11,86 @@ namespace IRCSharp.Entities
         /// </summary>
         public ChannelPrivilege Privileges { get; internal set; }
 
-        internal ChannelUser(User baseUser)
+        /// <summary>
+        ///     Identd of the <see cref="User"/>.
+        /// </summary>
+        public override string Identd => _baseUser.Identd;
+
+        /// <summary>
+        ///     Username of the <see cref="User"/>.
+        /// </summary>
+        public override string Username => _baseUser.Username;
+
+        /// <summary>
+        ///     Host of the <see cref="User"/>.
+        /// </summary>
+        public override string Host => _baseUser.Host;
+
+        /// <summary>
+        ///     Realname of the <see cref="User"/>.
+        /// </summary>
+        public override string Realname => _baseUser.Realname;
+
+        /// <summary>
+        ///     Idle time of the <see cref="User"/>.
+        /// </summary>
+        public override TimeSpan Idle => _baseUser.Idle;
+
+        /// <summary>
+        ///     Signon time of the <see cref="User"/>.
+        /// </summary>
+        public override DateTimeOffset Signon => _baseUser.Signon;
+
+        /// <summary>
+        ///     Server on which the <see cref="User"/> is connected to.
+        /// </summary>
+        public override string Server => _baseUser.Server;
+
+        /// <summary>
+        ///     Indicates if the <see cref="User"/> is an IRC Operator.
+        /// </summary>
+        public override bool IRCOperator => _baseUser.IRCOperator;
+
+        /// <summary>
+        ///     Host of the user.
+        /// </summary>
+        public override string ReverseIp => _baseUser.ReverseIp;
+
+        /// <summary>
+        ///     Ip of the user.
+        /// </summary>
+        public override string Ip => _baseUser.Ip;
+
+        /// <summary>
+        ///     Channels of the user.
+        /// </summary>
+        public override ReadOnlyCollection<Channel> Channels => _baseUser.Channels;
+
+        internal readonly User _baseUser;
+        internal readonly Channel _channel;
+
+        internal ChannelUser(IRCClient client, User baseUser, Channel channel) : base(client) 
         {
-            Identd = baseUser.Identd;
-            Username = baseUser.Identd;
-            Host = baseUser.Host;
-            Realname = baseUser.Realname;
-            Idle = baseUser.Idle;
-            Signon = baseUser.Signon;
-            Server = baseUser.Server;
-            IRCOperator = baseUser.IRCOperator;
-            ReverseIp = baseUser.ReverseIp;
-            Ip = baseUser.Ip;
-            _channels.AddRange(baseUser.Channels);
+            _baseUser = baseUser;
+            _channel = channel;
+
+            Privileges = ChannelPrivilege.Normal;
+        }
+
+        /// <summary>
+        ///     Kicks the user from the channel.
+        /// </summary>
+        /// <param name="reason">Reason of the kick.</param>
+        public void Kick(string reason = null)
+        {
+            if (reason is null)
+            {
+                _client.Send($"KICK {_channel.Name} {Username}");
+            }
+            else
+            {
+                _client.Send($"KICK {_channel.Name} {Username} :{reason}");
+            }
         }
     }
 }
