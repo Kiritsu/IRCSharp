@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -62,6 +63,11 @@ namespace IRCSharp
         ///     Fires when a user quit.
         /// </summary>
         public event Action<NicknameChangedEventArgs> NicknameChanged;
+
+        /// <summary>
+        ///     Fires when a message is received.
+        /// </summary>
+        public event Action<MessageReceivedEventArgs> MessageReceived;
 
         /// <summary>
         ///     True when authenticated to the remote server.
@@ -272,7 +278,22 @@ namespace IRCSharp
 
                         return;
                     }
-                case "PRIVMSG":
+                case "PRIVMSG": //<- :Soronax!Soronax@Soronax.gameadmin.NosTaleFr PRIVMSG Kiritsu :ccccc
+                    {
+                        var message = data.Substring(data.IndexOf(':') + 1);
+                        if (!user._channelMessages.TryGetValue(content[1], out var list))
+                        {
+                            list = new List<string> { message };
+                            user._channelMessages.TryAdd(content[1], list);
+                        }
+                        else
+                        {
+                            list.Add(message);
+                        }
+
+                        return;
+                    }
+                case "NOTICE": //<- :Soronax!Soronax@Soronax.gameadmin.NosTaleFr NOTICE Kiritsu :cc
                     {
                         return;
                     }

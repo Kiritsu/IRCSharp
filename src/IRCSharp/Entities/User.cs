@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 
 namespace IRCSharp.Entities
@@ -66,6 +68,8 @@ namespace IRCSharp.Entities
         /// </summary>
         public virtual ReadOnlyCollection<Channel> Channels { get; }
 
+        internal readonly ConcurrentDictionary<string, List<string>> _channelMessages;
+
         internal readonly List<Channel> _channels;
 
         internal readonly IRCClient _client;
@@ -74,8 +78,25 @@ namespace IRCSharp.Entities
         {
             _client = client;
 
+            _channelMessages = new ConcurrentDictionary<string, List<string>>();
+
             _channels = new List<Channel>();
             Channels = new ReadOnlyCollection<Channel>(_channels);
+        }
+
+        /// <summary>
+        ///     Gets the cached messages sent by the current <see cref="User"/> on the specified channel or dm.
+        /// </summary>
+        /// <param name="location">Target channel name or username.</param>
+        /// <remarks>If you request messages on a channel, please prefix it with #</remarks>
+        public ImmutableArray<string> GetMessages(string location)
+        {
+            if (_channelMessages.TryGetValue(location, out var list))
+            {
+                return list.ToImmutableArray();
+            }
+
+            return ImmutableArray<string>.Empty;
         }
 
         /// <summary>
