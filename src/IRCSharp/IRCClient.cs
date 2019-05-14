@@ -59,6 +59,11 @@ namespace IRCSharp
         public event Action<UserQuitEventArgs> UserQuit;
 
         /// <summary>
+        ///     Fires when a user quit.
+        /// </summary>
+        public event Action<NicknameChangedEventArgs> NicknameChanged;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -251,6 +256,20 @@ namespace IRCSharp
                     }
                 case "NICK":
                     {
+                        _cachedUsers.TryRemove(user.Username, out var oldUser);
+                        user.Username = content[1].Substring(1);
+                        _cachedUsers.TryRemove(user.Username, out _);
+                        _cachedUsers.TryAdd(user.Username, user);
+
+                        NicknameChanged?.Invoke(new NicknameChangedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            User = user,
+                            OldUsername = oldUser.Username,
+                            NewUsername = user.Username
+                        });
+
                         return;
                     }
                 case "PRIVMSG":
