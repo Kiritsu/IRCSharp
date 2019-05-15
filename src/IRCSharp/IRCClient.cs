@@ -303,11 +303,7 @@ namespace IRCSharp
                                 _cachedChannels.TryAdd(content[1], channel);
                             }
                             
-                            channel._messages.Add(message);
-                        }
-                        else //private
-                        {
-                            
+                            channel._messages.Add((user, message));
                         }
 
                         return;
