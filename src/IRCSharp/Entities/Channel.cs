@@ -49,9 +49,9 @@ namespace IRCSharp.Entities
         /// <summary>
         ///     Messages cache on this <see cref="Channel"/>.
         /// </summary>
-        public ReadOnlyCollection<string> Messages { get; }
+        public ReadOnlyCollection<(User, string)> Messages { get; }
         
-        internal readonly List<string> _messages;
+        internal readonly List<(User, string)> _messages;
         
         internal readonly IRCClient _client;
 
@@ -67,8 +67,8 @@ namespace IRCSharp.Entities
             _users = new List<ChannelUser>();
             Users = new ReadOnlyCollection<ChannelUser>(_users);
             
-            _messages = new List<string>();
-            Messages = new ReadOnlyCollection<string>(_messages);
+            _messages = new List<(User, string)>();
+            Messages = new ReadOnlyCollection<(User, string)>(_messages);
         }
 
         /// <summary>
