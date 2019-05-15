@@ -45,7 +45,14 @@ namespace IRCSharp.Entities
         ///     <see cref="DateTimeOffset"/> of the creation of the channel.
         /// </summary>
         public DateTimeOffset CreatedAt { get; internal set; }
-
+        
+        /// <summary>
+        ///     Messages cache on this <see cref="Channel"/>.
+        /// </summary>
+        public ReadOnlyCollection<(User, string)> Messages { get; }
+        
+        internal readonly List<(User, string)> _messages;
+        
         internal readonly IRCClient _client;
 
         internal Channel(IRCClient client)
@@ -59,6 +66,9 @@ namespace IRCSharp.Entities
 
             _users = new List<ChannelUser>();
             Users = new ReadOnlyCollection<ChannelUser>(_users);
+            
+            _messages = new List<(User, string)>();
+            Messages = new ReadOnlyCollection<(User, string)>(_messages);
         }
 
         /// <summary>

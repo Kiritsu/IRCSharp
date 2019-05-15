@@ -290,6 +290,21 @@ namespace IRCSharp
                         {
                             list.Add(message);
                         }
+                        
+                        if (content[1][0] == '#') //channel
+                        {
+                            if (!_cachedChannels.TryGetValue(content[1], out var channel))
+                            {
+                                channel = new Channel(this)
+                                {
+                                    Name = content[1]
+                                };
+
+                                _cachedChannels.TryAdd(content[1], channel);
+                            }
+                            
+                            channel._messages.Add((user, message));
+                        }
 
                         return;
                     }
