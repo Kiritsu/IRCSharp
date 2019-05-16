@@ -70,6 +70,11 @@ namespace IRCSharp
         public event Action<MessageReceivedEventArgs> MessageReceived;
 
         /// <summary>
+        ///     Fires when a notice is received.
+        /// </summary>
+        public event Action<NoticeReceivedEventArgs> NoticeReceived;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -225,7 +230,7 @@ namespace IRCSharp
 
                         if (channel._users.Any(x => x == user))
                         {
-                            channel._users.Remove(channel._users.FirstOrDefault(x => x == user));
+                            channel._users.RemoveAll(x => x == user);
                         }
 
                         UserLeft?.Invoke(new UserLeftEventArgs
@@ -241,7 +246,12 @@ namespace IRCSharp
                     }
                 case "QUIT":
                     {
-                        _cachedUsers.TryRemove(username, out _);
+                        _cachedUsers.TryRemove(user.Username, out _);
+
+                        foreach (var channel in _cachedChannels.Values)
+                        {
+                            channel._users.RemoveAll(x => x == user);
+                        }
 
                         var reason = "";
                         var idof = data.IndexOf(':');
@@ -278,7 +288,7 @@ namespace IRCSharp
 
                         return;
                     }
-                case "PRIVMSG": //<- :Soronax!Soronax@Soronax.gameadmin.NosTaleFr PRIVMSG Kiritsu :ccccc
+                case "PRIVMSG":
                     {
                         var message = data.Substring(data.IndexOf(':') + 1);
                         if (!user._channelMessages.TryGetValue(content[1], out var list))
@@ -290,8 +300,8 @@ namespace IRCSharp
                         {
                             list.Add(message);
                         }
-                        
-                        if (content[1][0] == '#') //channel
+
+                        if (content[1][0] == '#')
                         {
                             if (!_cachedChannels.TryGetValue(content[1], out var channel))
                             {
@@ -304,16 +314,63 @@ namespace IRCSharp
                             }
                             
                             channel._messages.Add((user, message));
+
+                            MessageReceived?.Invoke(new MessageReceivedEventArgs
+                            {
+                                Client = this,
+                                Channel = channel,
+                                CurrentUser = CurrentUser,
+                                Message = message,
+                                User = channel.Users.FirstOrDefault(x => x == user) ?? user
+                            });
+
+                            return;
                         }
+
+                        MessageReceived?.Invoke(new MessageReceivedEventArgs
+                        {
+                            Client = this,
+                            Channel = null,
+                            CurrentUser = CurrentUser,
+                            Message = message,
+                            User = user
+                        });
 
                         return;
                     }
-                case "NOTICE": //<- :Soronax!Soronax@Soronax.gameadmin.NosTaleFr NOTICE Kiritsu :cc
+                case "NOTICE":
                     {
+                        var message = data.Substring(data.IndexOf(':') + 1);
+                        if (!user._channelMessages.TryGetValue(content[1], out var list))
+                        {
+                            list = new List<string> { message };
+                            user._channelMessages.TryAdd(content[1], list);
+                        }
+                        else
+                        {
+                            list.Add(message);
+                        }
+
+                        NoticeReceived?.Invoke(new NoticeReceivedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Message = message,
+                            User = user
+                        });
+
                         return;
                     }
                 case "MODE":
                     {
+                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +i
+                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +b Cow!*@*
+                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +ib Cow!*@*
+                        return;
+                    }
+                case "KICK":
+                    {
+                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr KICK #JsP Cow :Nope
                         return;
                     }
             }
