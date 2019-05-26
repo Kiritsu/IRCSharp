@@ -75,6 +75,11 @@ namespace IRCSharp
         public event Action<NoticeReceivedEventArgs> NoticeReceived;
 
         /// <summary>
+        ///     Fires when channel modes have been updated on a channel.
+        /// </summary>
+        public event Action<ChannelModesUpdatedEventArgs> ChannelModeUpdated;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -217,10 +222,10 @@ namespace IRCSharp
                         {
                             channel = new Channel(this)
                             {
-                                Name = content[1]
+                                Name = channelName
                             };
 
-                            _cachedChannels.TryAdd(content[1], channel);
+                            _cachedChannels.TryAdd(channelName, channel);
                         }
 
                         if (user._channels.Any(x => x == channel))
@@ -312,7 +317,7 @@ namespace IRCSharp
 
                                 _cachedChannels.TryAdd(content[1], channel);
                             }
-                            
+
                             channel._messages.Add((user, message));
 
                             MessageReceived?.Invoke(new MessageReceivedEventArgs
@@ -363,9 +368,98 @@ namespace IRCSharp
                     }
                 case "MODE":
                     {
-                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +i
-                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +b Cow!*@*
-                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr MODE #JsP +ib Cow!*@*
+                        if (!_cachedChannels.TryGetValue(content[1], out var channel))
+                        {
+                            channel = new Channel(this)
+                            {
+                                Name = content[1]
+                            };
+
+                            _cachedChannels.TryAdd(content[1], channel);
+                        }
+
+                        var iofplus = content[2].IndexOf('+');
+                        var iofminus = content[2].IndexOf('-');
+
+                        var modesPlus = Array.Empty<char>();
+                        var modesMinus = Array.Empty<char>();
+
+                        if (iofplus != -1)
+                        {
+                            modesPlus = content[2].Substring(iofplus + 1).ToCharArray();
+                        }
+                        if (iofminus != -1)
+                        {
+                            if (iofplus != -1)
+                            {
+                                modesMinus = content[2].Substring(iofminus + 1, content[2].Length - iofplus - 1).ToCharArray();
+                            }
+                            else
+                            {
+                                modesMinus = content[2].Substring(iofminus + 1).ToCharArray();
+                            }
+                        }
+
+                        for (var i = 0; i < modesPlus.Length; i++)
+                        {
+                            if (!channel._modes.Contains(modesPlus[i]))
+                            {
+                                channel._modes.Add(modesPlus[i]);
+                            }
+                        }
+
+                        for (var i = 0; i < modesMinus.Length; i++)
+                        {
+                            if (!channel._modes.Contains(modesMinus[i]))
+                            {
+                                channel._modes.Add(modesMinus[i]);
+                            }
+                        }
+
+                        var complexModes = modesMinus.Where(x => _configuration.ComplexChanModes.Any(y => y == x && x != 'l')).ToList();
+                        complexModes.AddRange(modesPlus.Where(x => _configuration.ComplexChanModes.Any(y => y == x)));
+
+                        var extraArgs = content.Skip(3).ToList();
+
+                        var modesArgs = new Dictionary<char, (char, string)>();
+                        for (var i = 0; i < complexModes.Count && i < extraArgs.Count; i++)
+                        {
+                            modesArgs.Add(complexModes[i], (modesMinus.Contains(complexModes[i]) ? '-' : '+', extraArgs[i]));
+                        }
+
+                        foreach (var complexMod in modesArgs)
+                        {
+                            switch (complexMod.Key)
+                            {
+                                case 'b':
+                                    if (complexMod.Value.Item1 == '-')
+                                    {
+                                        channel._banList.Remove(complexMod.Value.Item2);
+                                    }
+                                    else
+                                    {
+                                        channel._banList.Add(complexMod.Value.Item2);
+                                    }
+                                    break;
+                                case 'l':
+                                    channel.Limit = int.Parse(complexMod.Value.Item2);
+                                    break;
+                                case 'k':
+                                    channel.Key = complexMod.Value.Item1 == '+' ? complexMod.Value.Item2 : "";
+                                    break;
+                            }
+                        }
+
+                        ChannelModeUpdated?.Invoke(new ChannelModesUpdatedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Channel = channel,
+                            ModesAdded = new ReadOnlyCollection<char>(modesPlus),
+                            ModesRemoved = new ReadOnlyCollection<char>(modesMinus),
+                            ModesArgs = new ReadOnlyDictionary<char, (char, string)>(modesArgs)
+                        });
+
                         return;
                     }
                 case "KICK":
@@ -406,6 +500,12 @@ namespace IRCSharp
                     });
 
                     Send($"WHOIS {_configuration.Host ?? username} {username}");
+                    break;
+
+                case 5:
+                    var chanModes = data.FirstOrDefault(x => x.StartsWith("CHANMODES=")).Split('=')[1];
+                    var complexChanModes = chanModes.Split(',').Where(x => x.Length == 1);
+                    _configuration.ComplexChanModes = complexChanModes.Select(x => x[0]).ToArray();
                     break;
 
                 case 311:

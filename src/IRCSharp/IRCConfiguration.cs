@@ -38,6 +38,11 @@
         internal string Host { get; set; }
 
         /// <summary>
+        ///     Chan modes that have parameters.
+        /// </summary>
+        internal char[] ComplexChanModes { get; set; }
+
+        /// <summary>
         ///     Creates a copy of the specified <see cref="IRCConfiguration"/>.
         /// </summary>
         /// <param name="copy">Instance of <see cref="IRCConfiguration"/> to copy.</param>

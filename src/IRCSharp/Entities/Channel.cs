@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using IRCSharp.Entities.Models;
 
@@ -52,6 +53,13 @@ namespace IRCSharp.Entities
         public ReadOnlyCollection<(User, string)> Messages { get; }
         
         internal readonly List<(User, string)> _messages;
+
+        /// <summary>
+        ///     Gets the banlist of this channel.
+        /// </summary>
+        public IImmutableSet<string> BanList => _banList.ToImmutableHashSet();
+
+        internal readonly HashSet<string> _banList;
         
         internal readonly IRCClient _client;
 
@@ -69,6 +77,8 @@ namespace IRCSharp.Entities
             
             _messages = new List<(User, string)>();
             Messages = new ReadOnlyCollection<(User, string)>(_messages);
+
+            _banList = new HashSet<string>();
         }
 
         /// <summary>
@@ -91,7 +101,7 @@ namespace IRCSharp.Entities
                 return false;
             }
 
-            return channel.Name == Name;
+            return channel.Name.Equals(Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>

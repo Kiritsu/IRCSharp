@@ -119,7 +119,7 @@ namespace IRCSharp.Entities
                 return false;
             }
 
-            return user.Username == Username;
+            return user.Username.Equals(Username, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
