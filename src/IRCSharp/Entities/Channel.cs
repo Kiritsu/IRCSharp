@@ -81,6 +81,11 @@ namespace IRCSharp.Entities
             _banList = new HashSet<string>();
         }
 
+        public void SendMessage(string content)
+        {
+            _client.Send($"PRIVMSG {Name} :{content}");
+        }
+
         /// <summary>
         ///     Checks wether the given object is equal to the <see cref="User"/>.
         /// </summary>

@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.28721.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IRCSharp", "src\IRCSharp\IRCSharp.csproj", "{81508751-77B8-4B05-BA1F-36BEBBE9CE53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRCSharp.Qmmands", "src\IRCSharp.Qmmands\IRCSharp.Qmmands.csproj", "{A18B8B60-8C0A-4BA3-A176-20CE44CC6804}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IRCSharp.Qmmands", "src\IRCSharp.Qmmands\IRCSharp.Qmmands.csproj", "{A18B8B60-8C0A-4BA3-A176-20CE44CC6804}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRCSharp.Example", "src\IRCSharp.Example\IRCSharp.Example.csproj", "{787890CA-6395-43D5-9275-34EED22762EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A18B8B60-8C0A-4BA3-A176-20CE44CC6804}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A18B8B60-8C0A-4BA3-A176-20CE44CC6804}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A18B8B60-8C0A-4BA3-A176-20CE44CC6804}.Release|Any CPU.Build.0 = Release|Any CPU
+		{787890CA-6395-43D5-9275-34EED22762EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{787890CA-6395-43D5-9275-34EED22762EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{787890CA-6395-43D5-9275-34EED22762EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{787890CA-6395-43D5-9275-34EED22762EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

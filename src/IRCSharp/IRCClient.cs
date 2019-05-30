@@ -17,22 +17,22 @@ namespace IRCSharp
     {
         private StreamWriter _writer;
 
-        private readonly TcpClient _tcp;
+        private TcpClient _tcp;
 
-        private readonly ConcurrentDictionary<string, User> _cachedUsers;
-        private readonly ConcurrentDictionary<string, Channel> _cachedChannels;
+        private ConcurrentDictionary<string, User> _cachedUsers;
+        private ConcurrentDictionary<string, Channel> _cachedChannels;
 
         internal readonly IRCConfiguration _configuration;
 
         /// <summary>
         ///     Gets the cached <see cref="User"/>s.
         /// </summary>
-        public ReadOnlyDictionary<string, User> CachedUsers { get; }
+        public ReadOnlyDictionary<string, User> CachedUsers { get; private set; }
 
         /// <summary>
         ///     Gets the cached <see cref="Channel"/>s.
         /// </summary>
-        public ReadOnlyDictionary<string, Channel> CachedChannels { get; }
+        public ReadOnlyDictionary<string, Channel> CachedChannels { get; private set; }
 
         /// <summary>
         ///     Fires when data is received.
@@ -105,7 +105,9 @@ namespace IRCSharp
 
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
+            CachedUsers = new ReadOnlyDictionary<string, User>(_cachedUsers);
             _cachedChannels = new ConcurrentDictionary<string, Channel>();
+            CachedChannels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
         }
 
         /// <summary>
@@ -113,6 +115,8 @@ namespace IRCSharp
         /// </summary>
         public void Connect()
         {
+            Reset();
+
             _tcp.Connect(_configuration.Hostname, _configuration.Port);
             _writer = new StreamWriter(_tcp.GetStream());
 
@@ -139,6 +143,24 @@ namespace IRCSharp
             }).Start();
         }
 
+        /// <summary>
+        ///     Disconnects from the remote server.
+        /// </summary>
+        public void Disconnect()
+        {
+            _tcp.Close();
+            _writer.Close();
+        }
+
+        private void Reset()
+        {
+            _tcp = new TcpClient();
+            _cachedUsers = new ConcurrentDictionary<string, User>();
+            CachedUsers = new ReadOnlyDictionary<string, User>(_cachedUsers);
+            _cachedChannels = new ConcurrentDictionary<string, Channel>();
+            CachedChannels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
+        }
+
         private void OnDataReceived(string data)
         {
             if (data.StartsWith("PING"))
@@ -146,7 +168,7 @@ namespace IRCSharp
                 Send(data.Replace("PING", "PONG"));
             }
 
-            var content = data.Split(' ');
+            var content = data.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (content.Length <= 1)
             {
                 return;
@@ -514,7 +536,8 @@ namespace IRCSharp
         {
             var command = data[0];
             var username = data[1];
-            var content = raw.Substring(raw.IndexOf(':') + 1);
+            var content = raw.Substring(1);
+            content = content.Substring(content.IndexOf(':') + 1);
 
             if (!int.TryParse(command, out var code))
             {
@@ -543,7 +566,12 @@ namespace IRCSharp
                     break;
 
                 case 5:
-                    var chanModes = data.FirstOrDefault(x => x.StartsWith("CHANMODES=")).Split('=')[1];
+                    var chanModes = data.FirstOrDefault(x => x.StartsWith("CHANMODES="))?.Split('=')[1];
+                    if (chanModes == null)
+                    {
+                        return;
+                    }
+
                     var complexChanModes = chanModes.Split(',').Where(x => x.Length == 1);
                     _configuration.ComplexChanModes = complexChanModes.Select(x => x[0]).ToArray();
                     break;
@@ -668,7 +696,7 @@ namespace IRCSharp
                             _cachedChannels.TryAdd(data[3], channel);
                         }
 
-                        var users = content.Split(' ');
+                        var users = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         foreach (var u in users)
                         {
                             var name = u.Substring(1);
@@ -753,7 +781,7 @@ namespace IRCSharp
                         }
 
                         user._channels.Clear();
-                        var channels = content.Split(' ');
+                        var channels = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         foreach (var chan in channels)
                         {
                             var name = chan.Substring(chan.IndexOf("#"));

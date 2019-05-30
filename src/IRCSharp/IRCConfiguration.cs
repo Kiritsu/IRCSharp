@@ -43,6 +43,14 @@
         internal char[] ComplexChanModes { get; set; }
 
         /// <summary>
+        ///     Creates a <see cref="IRCConfiguration"/>
+        /// </summary>
+        public IRCConfiguration()
+        {
+
+        }
+
+        /// <summary>
         ///     Creates a copy of the specified <see cref="IRCConfiguration"/>.
         /// </summary>
         /// <param name="copy">Instance of <see cref="IRCConfiguration"/> to copy.</param>

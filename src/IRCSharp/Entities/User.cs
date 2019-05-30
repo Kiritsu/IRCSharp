@@ -99,6 +99,11 @@ namespace IRCSharp.Entities
             return ImmutableArray<string>.Empty;
         }
 
+        public void SendMessage(string content)
+        {
+            _client.Send($"PRIVMSG {Username} :{content}");
+        }
+
         /// <summary>
         ///     Checks wether the given object is equal to the <see cref="User"/>.
         /// </summary>
