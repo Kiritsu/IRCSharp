@@ -80,6 +80,11 @@ namespace IRCSharp
         public event Action<ChannelModesUpdatedEventArgs> ChannelModeUpdated;
 
         /// <summary>
+        ///     Fires when a user has been kicked from a channel.
+        /// </summary>
+        public event Action<UserKickedEventArgs> UserKicked;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -390,14 +395,9 @@ namespace IRCSharp
                         }
                         if (iofminus != -1)
                         {
-                            if (iofplus != -1)
-                            {
-                                modesMinus = content[2].Substring(iofminus + 1, content[2].Length - iofplus - 1).ToCharArray();
-                            }
-                            else
-                            {
-                                modesMinus = content[2].Substring(iofminus + 1).ToCharArray();
-                            }
+                            modesMinus = iofplus != -1
+                                ? content[2].Substring(iofminus + 1, content[2].Length - iofplus - 1).ToCharArray()
+                                : content[2].Substring(iofminus + 1).ToCharArray();
                         }
 
                         for (var i = 0; i < modesPlus.Length; i++)
@@ -457,14 +457,54 @@ namespace IRCSharp
                             Channel = channel,
                             ModesAdded = new ReadOnlyCollection<char>(modesPlus),
                             ModesRemoved = new ReadOnlyCollection<char>(modesMinus),
-                            ModesArgs = new ReadOnlyDictionary<char, (char, string)>(modesArgs)
+                            ModesArgs = new ReadOnlyDictionary<char, (char, string)>(modesArgs),
+                            User = channel.Users.FirstOrDefault(x => x == user)
                         });
 
                         return;
                     }
                 case "KICK":
                     {
-                        //<- :Kiritsu!Kiritsu@Kiritsu.moderator.NosTaleFr KICK #JsP Cow :Nope
+                        if (!_cachedChannels.TryGetValue(content[1], out var channel))
+                        {
+                            channel = new Channel(this)
+                            {
+                                Name = content[1]
+                            };
+
+                            _cachedChannels.TryAdd(content[1], channel);
+                        }
+
+                        if (!_cachedUsers.TryGetValue(content[2], out var kicked))
+                        {
+                            kicked = new User(this)
+                            {
+                                Username = content[2]
+                            };
+
+                            _cachedUsers.TryAdd(content[2], kicked);
+                        }
+
+                        var kicker = channel._users.FirstOrDefault(x => x == user);
+                        if (kicker is null)
+                        {
+                            kicker = new ChannelUser(this, user, channel);
+                            channel._users.Add(kicker);
+                        }
+
+                        kicked._channels.Remove(channel);
+                        channel._users.RemoveAll(x => x == kicked);
+
+                        UserKicked?.Invoke(new UserKickedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Channel = channel,
+                            Kicked = kicked,
+                            Kicker = kicker,
+                            Reason = content.Length > 2 ? data.Substring(data.IndexOf(':') + 1) : ""
+                        });
+
                         return;
                     }
             }

@@ -24,5 +24,10 @@ namespace IRCSharp.EventArgs
         ///     Dictionary of mode by if it has been removed or not, and the extra args to it.
         /// </summary>
         public IReadOnlyDictionary<char, (char, string)> ModesArgs { get; internal set; }
+
+        /// <summary>
+        ///     User that changed channel modes.
+        /// </summary>
+        public ChannelUser User { get; internal set; }
     }
 }
