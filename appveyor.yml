@@ -1,0 +1,26 @@
+version: 0.0.{build}
+
+image: Visual Studio 2017
+
+branches:
+    only:
+        - master
+        
+install:
+    - cmd: appveyor downloadfile https://dist.nuget.org/win-x86-commandline/v4.3.0/nuget.exe
+    
+before_build:
+    - cmd: nuget restore
+
+build: off
+
+build_script:
+    - ps: dotnet msbuild src\IRCSharp\IRCSharp.csproj /p:Configuration=Release
+      
+notifications:
+    - provider: Slack
+      on_build_success: true
+      on_build_failure: true
+      on_build_status_changed: true
+      incoming_webhook:
+          secure: 'ydCsQfnLSOC7f4rKgL/vECQsMFVDZ7zQ6gp/Jv+EyOTPCLNanmEQSCyfz1GK2KnxkhGuZRgI3RKRkiYgAtXnKnZUW5TaUlIVtl29Xu3MBaMMA37FQwbmLoWhFfqrxTH6D6tOLZSbKRL96QAzQQ6XdkbCeOwsp2qvYt9znJPnPfQ9U1ak9YJqxkZNet2hQj4/'
