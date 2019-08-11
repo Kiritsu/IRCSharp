@@ -10,8 +10,7 @@ namespace IRCSharp.Qmmands.TypeParsers
     {
         public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value, CommandContext ctx, IServiceProvider provider)
         {
-            var context = ctx as IRCCommandContext;
-            if (context is null)
+            if (!(ctx is IRCCommandContext context))
             {
                 throw new ArgumentException($"Unexpected behavior: the context is not a {typeof(IRCCommandContext).Name}", nameof(context));
             }
