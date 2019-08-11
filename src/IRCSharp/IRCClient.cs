@@ -27,12 +27,12 @@ namespace IRCSharp
         /// <summary>
         ///     Gets the cached <see cref="User"/>s.
         /// </summary>
-        public ReadOnlyDictionary<string, User> CachedUsers { get; private set; }
+        public ReadOnlyDictionary<string, User> Users { get; private set; }
 
         /// <summary>
         ///     Gets the cached <see cref="Channel"/>s.
         /// </summary>
-        public ReadOnlyDictionary<string, Channel> CachedChannels { get; private set; }
+        public ReadOnlyDictionary<string, Channel> Channels { get; private set; }
 
         /// <summary>
         ///     Fires when data is received.
@@ -105,9 +105,9 @@ namespace IRCSharp
 
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
-            CachedUsers = new ReadOnlyDictionary<string, User>(_cachedUsers);
+            Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
             _cachedChannels = new ConcurrentDictionary<string, Channel>();
-            CachedChannels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
+            Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
         }
 
         /// <summary>
@@ -156,9 +156,9 @@ namespace IRCSharp
         {
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
-            CachedUsers = new ReadOnlyDictionary<string, User>(_cachedUsers);
+            Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
             _cachedChannels = new ConcurrentDictionary<string, Channel>();
-            CachedChannels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
+            Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
         }
 
         private void OnDataReceived(string data)

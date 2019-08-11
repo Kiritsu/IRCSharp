@@ -26,7 +26,7 @@ namespace IRCSharp.Qmmands.TypeParsers
 
                 user = context.Channel.Users.FirstOrDefault(x => x.Username == value) as T;
             }
-            else if (context.Client.CachedUsers.TryGetValue(value, out var usr))
+            else if (context.Client.Users.TryGetValue(value, out var usr))
             {
                 user = usr as T;
             }

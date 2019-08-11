@@ -15,9 +15,9 @@ namespace IRCSharp.Qmmands.TypeParsers
                 throw new ArgumentException($"Unexpected behavior: the context is not a {typeof(IRCCommandContext).Name}", nameof(context));
             }
 
-            if (!context.Client.CachedChannels.TryGetValue(value, out var channel))
+            if (!context.Client.Channels.TryGetValue(value, out var channel))
             {
-                if (!context.Client.CachedChannels.TryGetValue(value.Insert(0, "#"), out channel))
+                if (!context.Client.Channels.TryGetValue(value.Insert(0, "#"), out channel))
                 {
                     return new TypeParserResult<Channel>($"A channel with name {value} was not found.");
                 }
