@@ -17,7 +17,7 @@ Compile from source:
 If you want to contribute to the library which is not fully implemented yet, feel free to `Fork`, `Commit` and then `Pull Request`, or open new issues.
 
 ## Project used:
-- Qmmands is an open source CommandService and can be used with this project to create an IRC Bot: https://github.com/Quahu/Qmmands/
+- Qmmands is an open source command framework and can be used with this project to create an IRC Bot: https://github.com/Quahu/Qmmands/
 
 ## Example:
 This example uses `IRCSharp` and `IRCSharp.Qmmands`
