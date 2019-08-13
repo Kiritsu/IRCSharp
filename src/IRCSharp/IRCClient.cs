@@ -322,7 +322,8 @@ namespace IRCSharp
                     }
                 case "PRIVMSG":
                     {
-                        var message = data.Substring(data.IndexOf(':') + 1);
+                        var cnt = data.Substring(1);
+                        var message = cnt.Substring(cnt.IndexOf(':') + 1);
                         if (!user._channelMessages.TryGetValue(content[1], out var list))
                         {
                             list = new List<string> { message };

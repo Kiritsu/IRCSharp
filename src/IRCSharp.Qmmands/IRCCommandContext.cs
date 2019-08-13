@@ -40,14 +40,17 @@ namespace IRCSharp.Qmmands
         public string Message { get; internal set; }
 
         /// <summary>
+        ///     Gets the prefix of the command.
+        /// </summary>
+        public string Prefix { get; set; }
+
+        /// <summary>
         ///     Gets the dependency collection.
         /// </summary>
         public IServiceProvider Services { get; internal set; }
 
-        public IRCCommandContext(MessageReceivedEventArgs e, IServiceProvider services)
+        public IRCCommandContext(MessageReceivedEventArgs e)
         {
-            Services = services;
-
             Client = e.Client;
             Channel = e.Channel;
             Author = e.User;
@@ -58,6 +61,11 @@ namespace IRCSharp.Qmmands
             {
                 User = Channel.Users.FirstOrDefault(x => x == Author);
             }
+        }
+
+        public IRCCommandContext(MessageReceivedEventArgs e, IServiceProvider services) : this(e)
+        {
+            Services = services;   
         }
     }
 }

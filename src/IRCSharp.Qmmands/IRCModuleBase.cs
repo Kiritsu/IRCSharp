@@ -2,7 +2,7 @@
 
 namespace IRCSharp.Qmmands
 {
-    public sealed class IRCModuleBase : ModuleBase<IRCCommandContext>
+    public class IRCModuleBase : ModuleBase<IRCCommandContext>
     {
         public void Respond(string content)
         {

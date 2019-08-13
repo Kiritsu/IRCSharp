@@ -1,5 +1,8 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using IRCSharp.EventArgs;
+using IRCSharp.Qmmands;
+using Qmmands;
 
 namespace IRCSharp.Example
 {
@@ -17,24 +20,28 @@ namespace IRCSharp.Example
             });
 
             client.Ready += Client_Ready;
-            client.UserJoined += Client_UserJoined;
+
+            client.AddCommandService("!");
 
             client.Connect();
 
             Thread.Sleep(-1);
         }
 
-        private static void Client_UserJoined(UserJoinedEventArgs e)
-        {
-            if (e.User == e.CurrentUser)
-            {
-                e.Channel.SendMessage("Bonjour. Je voudrais un café au lait, s'il vous plait.");
-            }
-        }
-
         private static void Client_Ready(ReadyEventArgs e)
         {
             e.Client.Send("JOIN #JsP");
+        }
+    }
+
+    public class FunModule : IRCModuleBase
+    {
+        [Command("ping")]
+        public Task Ping()
+        {
+            Respond($"{Context.Author.Username}: Pong!");
+
+            return Task.CompletedTask;
         }
     }
 }
