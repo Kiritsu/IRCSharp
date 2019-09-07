@@ -214,6 +214,10 @@ namespace IRCSharp
                             };
 
                             _cachedChannels.TryAdd(content[1], channel);
+
+                            Send($"MODE {channel.Name}");
+                            Send($"NAMES {channel.Name}");
+                            Send($"MODE {channel.Name} +b");
                         }
 
                         var channelUser = new ChannelUser(this, user, channel);
@@ -457,11 +461,16 @@ namespace IRCSharp
                                 case 'b':
                                     if (complexMod.Value.Item1 == '-')
                                     {
-                                        channel._banList.Remove(complexMod.Value.Item2);
+                                        channel._banList.RemoveWhere(x => x.BannedHost == complexMod.Value.Item2);
                                     }
                                     else
                                     {
-                                        channel._banList.Add(complexMod.Value.Item2);
+                                        channel._banList.Add(new ChannelBan
+                                        {
+                                            BannedBy = user.Username,
+                                            BannedHost = complexMod.Value.Item2,
+                                            BannedOn = DateTimeOffset.UtcNow
+                                        });
                                     }
                                     break;
                                 case 'l':
@@ -732,6 +741,28 @@ namespace IRCSharp
                                 channel._users.Add(channelUser);
                             }
                         }
+
+                        return;
+                    }
+
+                case 367:
+                    {
+                        if (!_cachedChannels.TryGetValue(data[2], out var channel))
+                        {
+                            channel = new Channel(this)
+                            {
+                                Name = data[2]
+                            };
+
+                            _cachedChannels.TryAdd(data[2], channel);
+                        }
+
+                        channel._banList.Add(new ChannelBan
+                        {
+                            BannedHost = data[3],
+                            BannedBy = data[4],
+                            BannedOn = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[5]))
+                        });
 
                         return;
                     }

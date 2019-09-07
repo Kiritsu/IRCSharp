@@ -57,9 +57,9 @@ namespace IRCSharp.Entities
         /// <summary>
         ///     Gets the banlist of this channel.
         /// </summary>
-        public IImmutableSet<string> BanList => _banList.ToImmutableHashSet();
+        public IImmutableSet<ChannelBan> BanList => _banList.ToImmutableHashSet();
 
-        internal readonly HashSet<string> _banList;
+        internal readonly HashSet<ChannelBan> _banList;
         
         internal readonly IRCClient _client;
 
@@ -78,7 +78,7 @@ namespace IRCSharp.Entities
             _messages = new List<(User, string)>();
             Messages = new ReadOnlyCollection<(User, string)>(_messages);
 
-            _banList = new HashSet<string>();
+            _banList = new HashSet<ChannelBan>();
         }
 
         public void SendMessage(string content)
