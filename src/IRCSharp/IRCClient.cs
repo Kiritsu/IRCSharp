@@ -425,7 +425,7 @@ namespace IRCSharp
 
                         for (var i = 0; i < modesPlus.Length; i++)
                         {
-                            if (!channel._modes.Contains(modesPlus[i]))
+                            if (!channel._modes.Contains(modesPlus[i]) && modesPlus[i] != 'b')
                             {
                                 channel._modes.Add(modesPlus[i]);
                             }
@@ -433,7 +433,7 @@ namespace IRCSharp
 
                         for (var i = 0; i < modesMinus.Length; i++)
                         {
-                            if (!channel._modes.Contains(modesMinus[i]))
+                            if (!channel._modes.Contains(modesMinus[i]) && modesMinus[i] != 'b')
                             {
                                 channel._modes.Add(modesMinus[i]);
                             }
@@ -700,7 +700,7 @@ namespace IRCSharp
                         var users = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         foreach (var u in users)
                         {
-                            var name = u.Substring(1);
+                            var name = u.StartsWith('+') || u.StartsWith('@') ? u.Substring(1) : u.Substring(0);
                             if (!_cachedUsers.TryGetValue(name, out var user))
                             {
                                 user = new User(this) { Username = name };

@@ -7,7 +7,7 @@ namespace IRCSharp.Qmmands.TypeParsers
 {
     public sealed class ChannelTypeParser : TypeParser<Channel>
     {
-        public override ValueTask<TypeParserResult<Channel>> ParseAsync(Parameter parameter, string value, CommandContext ctx, IServiceProvider provider)
+        public override ValueTask<TypeParserResult<Channel>> ParseAsync(Parameter parameter, string value, CommandContext ctx)
         {
             if (!(ctx is IRCCommandContext context))
             {

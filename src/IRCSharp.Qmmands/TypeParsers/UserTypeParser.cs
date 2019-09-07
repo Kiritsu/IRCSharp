@@ -8,7 +8,7 @@ namespace IRCSharp.Qmmands.TypeParsers
 {
     public sealed class UserTypeParser<T> : TypeParser<T> where T : User
     {
-        public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value, CommandContext ctx, IServiceProvider provider)
+        public override ValueTask<TypeParserResult<T>> ParseAsync(Parameter parameter, string value, CommandContext ctx)
         {
             if (!(ctx is IRCCommandContext context))
             {

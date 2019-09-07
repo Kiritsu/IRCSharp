@@ -34,7 +34,7 @@ namespace IRCSharp.Qmmands
 
                 context.Prefix = prefix;
 
-                commands.ExecuteAsync(output, context, services).GetAwaiter().GetResult();
+                commands.ExecuteAsync(output, context).GetAwaiter().GetResult();
             }
         }
     }
