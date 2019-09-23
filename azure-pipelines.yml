@@ -19,14 +19,6 @@ steps:
     packageType: 'sdk'
     version: '3.0.x'
 
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
-  inputs:
-    command: 'restore'
-    restoreSolution: '$(solution)'
-    feedsToUse: 'config'
-
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
