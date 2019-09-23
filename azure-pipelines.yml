@@ -24,4 +24,7 @@ steps:
     command: 'pack'
     packagesToPack: '$(solution)'
     includesymbols: true
-    versioningScheme: 'byBuildNumber'
+    versioningScheme: 'byPrereleaseNumber'
+    majorVersion: '1'
+    minorVersion: '0'
+    patchVersion: '0'
