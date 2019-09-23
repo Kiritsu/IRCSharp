@@ -15,9 +15,9 @@ namespace IRCSharp.Entities.Models
         public string Author { get; internal set; }
 
         /// <summary>
-        ///     <see cref="DateTimeOffset"/> when the topic has been modified.
+        ///     <see cref="DateTimeOffset"/> when the topic has been set.
         /// </summary>
-        public DateTimeOffset ModifiedAt { get; internal set; }
+        public DateTimeOffset SetAt { get; internal set; }
 
         internal Topic()
         {

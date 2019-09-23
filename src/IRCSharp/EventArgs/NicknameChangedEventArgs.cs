@@ -18,5 +18,7 @@ namespace IRCSharp.EventArgs
         ///     New user's username.
         /// </summary>
         public string NewUsername { get; internal set; }
+
+
     }
 }

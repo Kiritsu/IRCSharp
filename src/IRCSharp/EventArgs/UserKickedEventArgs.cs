@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using IRCSharp.Entities;
+﻿using IRCSharp.Entities;
 
 namespace IRCSharp.EventArgs
 {
@@ -26,5 +23,10 @@ namespace IRCSharp.EventArgs
         ///     Reason of the kick.
         /// </summary>
         public string Reason { get; internal set; }
+
+        internal UserKickedEventArgs()
+        {
+
+        }
     }
 }

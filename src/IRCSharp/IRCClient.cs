@@ -350,6 +350,11 @@ namespace IRCSharp
                                 _cachedChannels.TryAdd(content[1], channel);
                             }
 
+                            if (!channel._users.Any(x => x == user))
+                            {
+                                channel._users.Add(new ChannelUser(this, user, channel));
+                            }
+
                             channel._messages.Add((user, message));
 
                             MessageReceived?.Invoke(new MessageReceivedEventArgs
@@ -461,15 +466,15 @@ namespace IRCSharp
                                 case 'b':
                                     if (complexMod.Value.Item1 == '-')
                                     {
-                                        channel._banList.RemoveWhere(x => x.BannedHost == complexMod.Value.Item2);
+                                        channel._banList.RemoveWhere(x => x.Host == complexMod.Value.Item2);
                                     }
                                     else
                                     {
                                         channel._banList.Add(new ChannelBan
                                         {
-                                            BannedBy = user.Username,
-                                            BannedHost = complexMod.Value.Item2,
-                                            BannedOn = DateTimeOffset.UtcNow
+                                            IssuedBy = user.Username,
+                                            Host = complexMod.Value.Item2,
+                                            IssuedOn = DateTimeOffset.UtcNow
                                         });
                                     }
                                     break;
@@ -689,7 +694,7 @@ namespace IRCSharp
                         }
 
                         channel.Topic.Author = data[3];
-                        channel.Topic.ModifiedAt = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
+                        channel.Topic.SetAt = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[4]));
 
                         return;
                     }
@@ -759,9 +764,9 @@ namespace IRCSharp
 
                         channel._banList.Add(new ChannelBan
                         {
-                            BannedHost = data[3],
-                            BannedBy = data[4],
-                            BannedOn = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[5]))
+                            Host = data[3],
+                            IssuedBy = data[4],
+                            IssuedOn = DateTimeOffset.FromUnixTimeSeconds(int.Parse(data[5]))
                         });
 
                         return;

@@ -7,16 +7,21 @@ namespace IRCSharp.Entities.Models
         /// <summary>
         ///     Gets the host that is banned from the channel.
         /// </summary>
-        public string BannedHost { get; internal set; }
+        public string Host { get; internal set; }
 
         /// <summary>
         ///     Gets the username that banned that host.
         /// </summary>
-        public string BannedBy { get; internal set; }
+        public string IssuedBy { get; internal set; }
 
         /// <summary>
         ///     Gets the date and time this host was banned.
         /// </summary>
-        public DateTimeOffset BannedOn { get; internal set; }
+        public DateTimeOffset IssuedOn { get; internal set; }
+
+        internal ChannelBan()
+        {
+
+        }
     }
 }

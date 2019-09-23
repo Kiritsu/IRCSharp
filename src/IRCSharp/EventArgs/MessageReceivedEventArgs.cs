@@ -18,5 +18,10 @@ namespace IRCSharp.EventArgs
         ///     Message that has been sent.
         /// </summary>
         public string Message { get; internal set; }
+
+        internal MessageReceivedEventArgs()
+        {
+
+        }
     }
 }

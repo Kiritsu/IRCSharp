@@ -1,10 +1,9 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using IRCSharp;
 using IRCSharp.EventArgs;
-using IRCSharp.Qmmands;
-using Qmmands;
 
-namespace IRCSharp.Example
+namespace IRCShdarp.Example
 {
     public class Program
     {
@@ -12,36 +11,28 @@ namespace IRCSharp.Example
         {
             var client = new IRCClient(new IRCConfiguration
             {
-                Username = "KiriTest",
-                Hostname = "irc.onlinegamesnet.net",
+                Username = "kiritsu___",
+                Hostname = "irc.chat.twitch.tv",
                 Port = 6667,
-                Identd = "KiriTest",
-                RealName = "Bim bam boom!"
+                Password = "zzz"
             });
 
             client.Ready += Client_Ready;
-
-            client.AddCommandService("!");
+            client.MessageReceived += Client_MessageReceived;
 
             client.Connect();
 
             Thread.Sleep(-1);
         }
 
+        private static void Client_MessageReceived(MessageReceivedEventArgs e)
+        {
+            Console.WriteLine($"{e.Channel.Name} - {e.User.Username}: {e.Message}");
+        }
+
         private static void Client_Ready(ReadyEventArgs e)
         {
-            e.Client.Send("JOIN #JsP");
-        }
-    }
-
-    public class FunModule : IRCModuleBase
-    {
-        [Command("ping")]
-        public Task Ping()
-        {
-            Respond($"{Context.Author.Username}: Pong!");
-
-            return Task.CompletedTask;
+            e.Client.Send("JOIN #sardoche");
         }
     }
 }

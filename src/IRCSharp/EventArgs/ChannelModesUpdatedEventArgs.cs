@@ -29,5 +29,10 @@ namespace IRCSharp.EventArgs
         ///     User that changed channel modes.
         /// </summary>
         public ChannelUser User { get; internal set; }
+
+        internal ChannelModesUpdatedEventArgs()
+        {
+
+        }
     }
 }
