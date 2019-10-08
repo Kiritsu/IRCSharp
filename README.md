@@ -3,7 +3,7 @@
 IRCSharp is a library written in C# for IRC (Internal Relay Chat)
 
 ## Requirements:
-- .NET Core 2.2
+- .NET Core 3.0
 
 ## Installation:
 Compile from source:
