@@ -350,11 +350,6 @@ namespace IRCSharp
                                 _cachedChannels.TryAdd(content[1], channel);
                             }
 
-                            if (!channel._users.Any(x => x == user))
-                            {
-                                channel._users.Add(new ChannelUser(this, user, channel));
-                            }
-
                             channel._messages.Add((user, message));
 
                             MessageReceived?.Invoke(new MessageReceivedEventArgs
@@ -876,8 +871,50 @@ namespace IRCSharp
         /// <param name="data">Content to send.</param>
         public void Send(string data)
         {
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                throw new ArgumentException("You must not send null or whitespaced data.", nameof(data));
+            }
+
             _writer.WriteLine(data);
             _writer.Flush();
+        }
+
+        /// <summary>
+        ///     Joins the specified channel.
+        /// </summary>
+        /// <param name="channel">Channel to join.</param>
+        public void Join(string channel)
+        {
+            Send($"JOIN {channel}");
+        }
+
+        /// <summary>
+        ///     Rejoins the specified channel.
+        /// </summary>
+        /// <param name="channel">Channel to rejoin.</param>
+        public void Rejoin(string channel)
+        {
+            Send($"PART {channel}");
+            Send($"JOIN {channel}");
+        }
+
+        /// <summary>
+        ///     Leaves the specified channel.
+        /// </summary>
+        /// <param name="channel">Channel to leave.</param>
+        public void Part(string channel)
+        {
+            Send($"PART {channel}");
+        }
+
+        /// <summary>
+        ///     Updates your username.
+        /// </summary>
+        /// <param name="username">New username.</param>
+        public void ChangeNick(string username)
+        {
+            Send($"NICK {username}");
         }
     }
 }

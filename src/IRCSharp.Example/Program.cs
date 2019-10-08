@@ -14,25 +14,31 @@ namespace IRCShdarp.Example
                 Username = "kiritsu___",
                 Hostname = "irc.chat.twitch.tv",
                 Port = 6667,
-                Password = "zzz"
+                Password = "oauth"
             });
 
             client.Ready += Client_Ready;
             client.MessageReceived += Client_MessageReceived;
+            client.DataReceived += Client_DataReceived;
 
             client.Connect();
 
             Thread.Sleep(-1);
         }
 
+        private static void Client_DataReceived(string obj)
+        {
+            Console.WriteLine($"> {obj}");
+        }
+
         private static void Client_MessageReceived(MessageReceivedEventArgs e)
         {
-            Console.WriteLine($"{e.Channel.Name} - {e.User.Username}: {e.Message}");
+            //Console.WriteLine($"{e.Channel.Name} - {e.User.Username}: {e.Message}");
         }
 
         private static void Client_Ready(ReadyEventArgs e)
         {
-            e.Client.Send("JOIN #sardoche");
+            e.Client.Send("JOIN #iwilldominate");
         }
     }
 }

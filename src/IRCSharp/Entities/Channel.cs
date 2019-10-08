@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Text;
 using IRCSharp.Entities.Models;
 
 namespace IRCSharp.Entities
@@ -81,9 +82,40 @@ namespace IRCSharp.Entities
             _banList = new HashSet<ChannelBan>();
         }
 
+        /// <summary>
+        ///     Sends a message to the channel.
+        /// </summary>
+        /// <param name="content">Message to send.</param>
         public void SendMessage(string content)
         {
             _client.Send($"PRIVMSG {Name} :{content}");
+        }
+
+        /// <summary>
+        ///     Kicks the user from the channel.
+        /// </summary>
+        /// <param name="user">User to kick.</param>
+        /// <param name="reason">Reason of the kick.</param>
+        public void Kick(ChannelUser user, string reason = null)
+        {
+            var str = new StringBuilder();
+            str.Append($"KICK {Name} {user.Username}");
+
+            if (!(reason is null))
+            {
+                str.Append($":{reason}");
+            }
+
+            _client.Send(str.ToString());
+        }
+
+        /// <summary>
+        ///     Invites a user in the channel.
+        /// </summary>
+        /// <param name="user">User to invite.</param>
+        public void Invite(User user)
+        {
+            _client.Send($"INVITE {user.Username} {Name}");
         }
 
         /// <summary>
