@@ -33,6 +33,12 @@
         public string Password { get; set; }
 
         /// <summary>
+        ///     Indicates wether <see cref="IRCClient"/> must throw on timeout. 
+        ///     When set to false, it will try to reconnect.
+        /// </summary>
+        public bool ThrowsOnTimeout { get; set; }
+
+        /// <summary>
         ///     Host sent by the server.
         /// </summary>
         internal string Host { get; set; }
@@ -62,6 +68,7 @@
             Identd = copy.Identd;
             RealName = copy.RealName;
             Password = copy.Password;
+            ThrowsOnTimeout = copy.ThrowsOnTimeout;
         }
     }
 }

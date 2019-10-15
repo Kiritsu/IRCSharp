@@ -12,9 +12,8 @@ namespace IRCShdarp.Example
             var client = new IRCClient(new IRCConfiguration
             {
                 Username = "kiritsu___",
-                Hostname = "irc.chat.twitch.tv",
-                Port = 6667,
-                Password = "oauth"
+                Hostname = "irc.onlinegamesnet.net",
+                Port = 6667
             });
 
             client.Ready += Client_Ready;
@@ -38,7 +37,7 @@ namespace IRCShdarp.Example
 
         private static void Client_Ready(ReadyEventArgs e)
         {
-            e.Client.Send("JOIN #iwilldominate");
+            e.Client.Send("JOIN #jsp");
         }
     }
 }

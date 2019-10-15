@@ -10,6 +10,7 @@ using IRCSharp.Entities;
 using IRCSharp.Entities.Enums;
 using IRCSharp.Entities.Models;
 using IRCSharp.EventArgs;
+using IRCSharp.Services;
 
 namespace IRCSharp
 {
@@ -21,6 +22,8 @@ namespace IRCSharp
 
         private ConcurrentDictionary<string, User> _cachedUsers;
         private ConcurrentDictionary<string, Channel> _cachedChannels;
+
+        private TimeoutService _timeout;
 
         internal readonly IRCConfiguration _configuration;
 
@@ -108,11 +111,17 @@ namespace IRCSharp
             Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
             _cachedChannels = new ConcurrentDictionary<string, Channel>();
             Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
+
+            _timeout = new TimeoutService(this);
+            new Thread(() => _timeout.Run(CancellationToken.None)).Start();
         }
 
         /// <summary>
         ///     Connects to the remote server.
         /// </summary>
+        /// <remarks>
+        ///     Resets the cache and internal objects before trying to connect, in case of a reconnect.
+        /// </remarks>
         public void Connect()
         {
             Reset();
@@ -135,9 +144,16 @@ namespace IRCSharp
                 {
                     while (_tcp.Connected)
                     {
-                        var data = reader.ReadLine();
+                        try
+                        {
+                            var data = reader.ReadLine();
 
-                        DataReceived?.Invoke(data);
+                            DataReceived?.Invoke(data);
+                        }
+                        catch (IOException)
+                        {
+                            break;
+                        }
                     }
                 }
             }).Start();
@@ -152,6 +168,21 @@ namespace IRCSharp
             _writer.Close();
         }
 
+        internal void Disconnect(bool throwOnTimeout)
+        {
+            _tcp.Close();
+            _writer.Close();
+
+            if (throwOnTimeout)
+            {
+                throw new TimeoutException("The connection with the remote server was lost.");
+            }
+            else
+            {
+                Connect();
+            }
+        }
+
         private void Reset()
         {
             _tcp = new TcpClient();
@@ -159,12 +190,18 @@ namespace IRCSharp
             Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
             _cachedChannels = new ConcurrentDictionary<string, Channel>();
             Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
+
+            _timeout = new TimeoutService(this);
+            new Thread(() => _timeout.Run(CancellationToken.None)).Start();
         }
 
         private void OnDataReceived(string data)
         {
             if (data.StartsWith("PING"))
             {
+                //Tells the timeout service we've received a PING message.
+                _timeout.UpdatePing();
+
                 Send(data.Replace("PING", "PONG"));
             }
 
