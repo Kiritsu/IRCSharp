@@ -24,6 +24,7 @@ namespace IRCSharp
         private ConcurrentDictionary<string, Channel> _cachedChannels;
 
         private TimeoutService _timeout;
+        private CancellationTokenSource _tokenSource;
 
         internal readonly IRCConfiguration _configuration;
 
@@ -113,7 +114,8 @@ namespace IRCSharp
             Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
 
             _timeout = new TimeoutService(this);
-            new Thread(() => _timeout.Run(CancellationToken.None)).Start();
+            _tokenSource = new CancellationTokenSource();
+            new Thread(() => _timeout.Run(_tokenSource.Token)).Start();
         }
 
         /// <summary>
@@ -166,12 +168,14 @@ namespace IRCSharp
         {
             _tcp.Close();
             _writer.Close();
+            _tokenSource.Cancel();
         }
 
         internal void Disconnect(bool throwOnTimeout)
         {
             _tcp.Close();
             _writer.Close();
+            _tokenSource.Cancel();
 
             if (throwOnTimeout)
             {
@@ -192,7 +196,8 @@ namespace IRCSharp
             Channels = new ReadOnlyDictionary<string, Channel>(_cachedChannels);
 
             _timeout = new TimeoutService(this);
-            new Thread(() => _timeout.Run(CancellationToken.None)).Start();
+            _tokenSource = new CancellationTokenSource();
+            new Thread(() => _timeout.Run(_tokenSource.Token)).Start();
         }
 
         private void OnDataReceived(string data)

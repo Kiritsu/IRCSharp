@@ -20,7 +20,7 @@ namespace IRCSharp.Services
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (LastPing < DateTimeOffset.Now - TimeSpan.FromMinutes(5))
+                if (LastPing < DateTimeOffset.Now - _client._configuration.Timeout)
                 {
                     _client.Disconnect(_client._configuration.ThrowsOnTimeout);
                     return;
