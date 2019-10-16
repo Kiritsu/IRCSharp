@@ -35,7 +35,7 @@ namespace IRCSharp
         public string Password { get; set; }
 
         /// <summary>
-        ///     Indicates wether <see cref="IRCClient"/> must throw on timeout. 
+        ///     Indicates whether <see cref="IRCClient"/> must throw on timeout. 
         ///     When set to false, it will try to reconnect.
         /// </summary>
         public bool ThrowsOnTimeout { get; set; }
