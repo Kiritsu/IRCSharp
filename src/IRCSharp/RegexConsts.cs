@@ -179,5 +179,15 @@ namespace IRCSharp
         //todo: 393 RPL_USERS need to handle ":<username> <ttyline> <hostname>"
         //394 RPL_ENDOFUSERS useless to handle
         //todo: 395 RPL_NOUSERS need to handle 
+        
+        //407
+        public static readonly Regex RPL_TOO_MANY_TARGETS = new Regex(
+            "^(?<target>.+) :(?<error_code>.+) recipients\\. (?<abort_message>.+)$",
+            Options);
+        
+        //436
+        public static readonly Regex ERR_NICK_COLLISION = new Regex(
+            "^(?<nickname>.+) :Nickname collision KILL from (?<user>.+)@(?<host>.+)$",
+            Options);
     }
 }
