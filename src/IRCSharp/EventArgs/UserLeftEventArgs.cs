@@ -2,7 +2,7 @@
 
 namespace IRCSharp.EventArgs
 {
-    public class UserLeftEventArgs : EventArgs
+    public sealed class UserLeftEventArgs : EventArgs
     {
         /// <summary>
         ///     User that left the channel.

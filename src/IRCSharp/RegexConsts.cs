@@ -4,108 +4,110 @@ namespace IRCSharp
 {
     public class RegexConsts
     {
+        private const RegexOptions Options = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase;
+        
         //todo: ensure every RPL has its proper event and handle those who needs s p e c i a l b e h a v i o r 
         
         //001
         public static readonly Regex RPL_WELCOME = new Regex(
             "^Welcome to the Internet Relay Network (?<nick>.+)!(?<user>.+)@(?<host>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //002
-        public static readonly Regex RPL_YOURHOST = new Regex(
-            "^Your host is (?<servername>.+), running version (?<version>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        public static readonly Regex RPL_YOUR_HOST = new Regex(
+            "^Your host is (?<server_name>.+), running version (?<version>.+)$", 
+            Options);
         
         //003
         public static readonly Regex RPL_CREATED = new Regex(
             "^This server was created (?<date>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //004
-        public static readonly Regex RPL_MYINFO = new Regex(
+        public static readonly Regex RPL_MY_INFO = new Regex(
             "^(?<server_name>[^\\s]+) (?<version>[^\\s]+) (?<user_modes>[^\\s]+) (?<channel_modes>[^\\s]+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //005
         public static readonly Regex RPL_BOUNCE = new Regex(
             "^Try server (?<server_name>.+), port (?<port>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         /* wtf???
          * <- :OGN5.OnlineGamesNet.net 005 Kiritsu WHOX WALLCHOPS WALLVOICES USERIP CPRIVMSG CNOTICE SILENCE=15 MODES=6 MAXCHANNELS=30 MAXBANS=99 NICKLEN=30 :are supported by this server
          * <- :OGN5.OnlineGamesNet.net 005 Kiritsu MAXNICKLEN=30 TOPICLEN=500 AWAYLEN=300 KICKLEN=500 CHANNELLEN=75 MAXCHANNELLEN=200 CHANTYPES=# PREFIX=(ov)@+ STATUSMSG=@+ CHANMODES=b,k,l,cCimMnpstrDdRz CASEMAPPING=rfc1459 NETWORK=OnlineGamesNet :are supported by this server
          */
         
         //200
-        public static readonly Regex RPL_TRACELINK = new Regex(
-            "^Link (?<version_debug>[^\\s]+) (?<destination>[^\\s]+) (?<next_server>[^\\s]+) (?<protocol_version>[^\\s]+) (?<uptime_seconds>[^\\s]+) (?<backstream_sendQ>[^\\s]+) $",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        public static readonly Regex RPL_TRACE_LINK = new Regex(
+            "^Link (?<version_debug>[^\\s]+) (?<destination>[^\\s]+) (?<next_server>[^\\s]+) (?<protocol_version>[^\\s]+) (?<uptime_seconds>[^\\s]+) (?<back_stream_sendQ>[^\\s]+) $",
+            Options);
         
         //201
-        public static readonly Regex RPL_TRACECONNECTING = new Regex(
+        public static readonly Regex RPL_TRACE_CONNECTING = new Regex(
             "^Try. (?<class>.+) (?<server>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //202
-        public static readonly Regex RPL_TRACEHANDSHAKE = new Regex(
+        public static readonly Regex RPL_TRACE_HANDSHAKE = new Regex(
             "^H.S. (?<class>.+) (?<server>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //203
-        public static readonly Regex RPL_TRACEUNKNOWN = new Regex(
+        public static readonly Regex RPL_TRACE_UNKNOWN = new Regex(
             "^\\?\\?\\?\\? (?<class>.+) (?<ip>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //204
-        public static readonly Regex RPL_TRACEOPERATOR = new Regex(
+        public static readonly Regex RPL_TRACE_OPERATOR = new Regex(
             "^Oper (?<class>.+) (?<server>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //205
-        public static readonly Regex RPL_TRACEUSER = new Regex(
+        public static readonly Regex RPL_TRACE_USER = new Regex(
             "^User (?<class>.+) (?<server>.+)$", 
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //206
-        public static readonly Regex RPL_TRACESERVER = new Regex(
-            "^Serv (?<class>.+) (?<nbr1>.+)S (?<nbr2>.+)C (?<server>.+) (?<fullhost>.+) V(?<protocol_version>.+) $",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        public static readonly Regex RPL_TRACE_SERVER = new Regex(
+            "^Serv (?<class>.+) (?<int_s>.+)S (?<int_c>.+)C (?<server>.+) (?<fullhost>.+) V(?<protocol_version>.+) $",
+            Options);
         
         //207
-        public static readonly Regex RPL_TRACESERVICE = new Regex(
+        public static readonly Regex RPL_TRACE_SERVICE = new Regex(
             "^Service (?<class>.+) (?<name>.+) (?<type>.+) (?<active_type>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //208 
-        public static readonly Regex RPL_TRACENEWTYPE = new Regex(
+        public static readonly Regex RPL_TRACE_NEWTYPE = new Regex(
             "^(?<new_type>.+) 0 (?<client_name>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //209
-        public static readonly Regex RPL_TRACECLASS = new Regex(
+        public static readonly Regex RPL_TRACE_CLASS = new Regex(
             "^Class (?<class>.+) (?<count>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //261
-        public static readonly Regex RPL_TRACELOG = new Regex(
+        public static readonly Regex RPL_TRACE_LOG = new Regex(
             "^File (?<log_file>.+) (?<debug_level>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //262 RPL_TRACEEND useless to handle
 
         //todo: 301 need to handle
         public static readonly Regex RPL_AWAY = new Regex(
             "^(?<nick>.+) :(?<message>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //302
-        public static readonly Regex RPL_USERHOST = new Regex(
+        public static readonly Regex RPL_USER_HOST = new Regex(
             "^:*1(?<reply>.+) \\*\\(*$", //don't need to get ' " " <reply> )'
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //303
-        public static readonly Regex RPL_ISON = new Regex(
+        public static readonly Regex RPL_IS_ON = new Regex(
             "^:*1(?<nick>.+) \\*\\(*$", //don't need to get ' " " <nick> )'
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //305 RPL_UNAWAY :You are no longer marked as being away
         //306 RPL_NOWAWAY :You have been marked as being away
@@ -140,7 +142,7 @@ namespace IRCSharp
         //todo: 351 RPL_VERSION need to handle "<version>.<debuglevel> <server> :<comment>"
         public static readonly Regex RPL_VERSION = new Regex(
             "^(?<version>[^\\s]+)\\.(?<debug_level>[^\\s]+) (?<server>[^\\s]+) :(?<comments>.+)$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            Options);
         
         //todo: 352 RPL_WHOREPLY need to handle "<channel> <user> <host> <server> <nick> <wtf_no_one_cares_of_this> :<hop_count> <real name>"
         //315 RPL_ENDOFWHO useless to handle
@@ -151,7 +153,8 @@ namespace IRCSharp
         //todo: 364 RPL_LINKS need to handle "<mask> <server> :<hop_count> <server_info>"
         public static readonly Regex RPL_LINKS = new Regex(
             "^(?<mask>[^\\s]+) (?<server>[^\\s]+) :(?<hop_count>[^\\s]+) (?<server_info>[^\\s]+) $",
-        RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        Options);
+        
         //365 RPL_ENDOFLINKS useless to handle
         
         //367 RPL_BANLIST manually handled

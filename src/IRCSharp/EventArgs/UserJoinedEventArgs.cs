@@ -2,7 +2,7 @@
 
 namespace IRCSharp.EventArgs
 {
-    public class UserJoinedEventArgs : EventArgs
+    public sealed class UserJoinedEventArgs : EventArgs
     {
         /// <summary>
         ///     User that joined the channel.

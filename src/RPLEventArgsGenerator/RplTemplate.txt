@@ -1,0 +1,17 @@
+﻿using System;
+using IRCSharp;
+using IRCSharp.Entities;
+using IRCSharp.Services;
+
+namespace IRCSharp.EventArgs
+{
+    //Auto-Generated code for {0}
+    public sealed class {0}EventArgs : EventArgs 
+    { 
+{1}
+        internal {0}EventArgs()
+        {
+             
+        }
+    }
+}
