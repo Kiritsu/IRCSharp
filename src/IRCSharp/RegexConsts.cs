@@ -35,7 +35,64 @@ namespace IRCSharp
          * <- :OGN5.OnlineGamesNet.net 005 Kiritsu MAXNICKLEN=30 TOPICLEN=500 AWAYLEN=300 KICKLEN=500 CHANNELLEN=75 MAXCHANNELLEN=200 CHANTYPES=# PREFIX=(ov)@+ STATUSMSG=@+ CHANMODES=b,k,l,cCimMnpstrDdRz CASEMAPPING=rfc1459 NETWORK=OnlineGamesNet :are supported by this server
          */
         
-        //301
+        //200
+        public static readonly Regex RPL_TRACELINK = new Regex(
+            "^Link (?<version_debug>[^\\s]+) (?<destination>[^\\s]+) (?<next_server>[^\\s]+) (?<protocol_version>[^\\s]+) (?<uptime_seconds>[^\\s]+) (?<backstream_sendQ>[^\\s]+) $",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //201
+        public static readonly Regex RPL_TRACECONNECTING = new Regex(
+            "^Try. (?<class>.+) (?<server>.+)$", 
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //202
+        public static readonly Regex RPL_TRACEHANDSHAKE = new Regex(
+            "^H.S. (?<class>.+) (?<server>.+)$", 
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //203
+        public static readonly Regex RPL_TRACEUNKNOWN = new Regex(
+            "^\\?\\?\\?\\? (?<class>.+) (?<ip>.+)$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //204
+        public static readonly Regex RPL_TRACEOPERATOR = new Regex(
+            "^Oper (?<class>.+) (?<server>.+)$", 
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //205
+        public static readonly Regex RPL_TRACEUSER = new Regex(
+            "^User (?<class>.+) (?<server>.+)$", 
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //206
+        public static readonly Regex RPL_TRACESERVER = new Regex(
+            "^Serv (?<class>.+) (?<nbr1>.+)S (?<nbr2>.+)C (?<server>.+) (?<fullhost>.+) V(?<protocol_version>.+) $",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //207
+        public static readonly Regex RPL_TRACESERVICE = new Regex(
+            "^Service (?<class>.+) (?<name>.+) (?<type>.+) (?<active_type>.+)$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //208 
+        public static readonly Regex RPL_TRACENEWTYPE = new Regex(
+            "^(?<new_type>.+) 0 (?<client_name>.+)$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //209
+        public static readonly Regex RPL_TRACECLASS = new Regex(
+            "^Class (?<class>.+) (?<count>.+)$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //261
+        public static readonly Regex RPL_TRACELOG = new Regex(
+            "^File (?<log_file>.+) (?<debug_level>.+)$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        
+        //262 RPL_TRACEEND useless to handle
+
+        //todo: 301 need to handle
         public static readonly Regex RPL_AWAY = new Regex(
             "^(?<nick>.+) :(?<message>.+)$",
             RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);

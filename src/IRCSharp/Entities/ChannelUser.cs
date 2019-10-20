@@ -62,6 +62,16 @@ namespace IRCSharp.Entities
         public override string Ip => _baseUser.Ip;
 
         /// <summary>
+        ///     Whether the user is on away mode.
+        /// </summary>
+        public override bool IsAway => _baseUser.IsAway;
+
+        /// <summary>
+        ///     Away message of the user.
+        /// </summary>
+        public override string Away => _baseUser.Away;
+
+        /// <summary>
         ///     Channels of the user.
         /// </summary>
         public override ReadOnlyCollection<Channel> Channels => _baseUser.Channels;

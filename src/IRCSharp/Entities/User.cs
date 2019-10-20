@@ -62,6 +62,16 @@ namespace IRCSharp.Entities
         ///     Ip of the user.
         /// </summary>
         public virtual string Ip { get; internal set; }
+        
+        /// <summary>
+        ///     Whether the user is on away mode.
+        /// </summary>
+        public virtual bool IsAway => !string.IsNullOrWhiteSpace(Away);
+        
+        /// <summary>
+        ///     Away message of the user.
+        /// </summary>
+        public virtual string Away { get; internal set; }
 
         /// <summary>
         ///     Channels of the user.
