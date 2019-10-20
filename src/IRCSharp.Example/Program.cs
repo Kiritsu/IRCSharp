@@ -17,24 +17,17 @@ namespace IRCShdarp.Example
             });
 
             client.Ready += Client_Ready;
-            client.MessageReceived += Client_MessageReceived;
-            client.DataReceived += Client_DataReceived;
+            client.UnhandledDataReceived += ClientOnUnhandledDataReceived;
 
             client.Connect();
 
             Thread.Sleep(-1);
         }
 
-        private static void Client_DataReceived(string obj)
+        private static void ClientOnUnhandledDataReceived(string obj)
         {
-            Console.WriteLine($"> {obj}");
+            Console.WriteLine($"[UNHANDLED]: {obj}");
         }
-
-        private static void Client_MessageReceived(MessageReceivedEventArgs e)
-        {
-            //Console.WriteLine($"{e.Channel.Name} - {e.User.Username}: {e.Message}");
-        }
-
         private static void Client_Ready(ReadyEventArgs e)
         {
             e.Client.Send("JOIN #jsp");

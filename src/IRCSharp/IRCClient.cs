@@ -12,6 +12,13 @@ using IRCSharp.Entities.Models;
 using IRCSharp.EventArgs;
 using IRCSharp.Services;
 
+// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InconsistentNaming
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
+
 namespace IRCSharp
 {
     public sealed class IRCClient
@@ -42,6 +49,11 @@ namespace IRCSharp
         ///     Fires when data is received.
         /// </summary>
         public event Action<string> DataReceived;
+
+        /// <summary>
+        ///     Fires when unhandled data is received. Useful when debugging.
+        /// </summary>
+        public event Action<string> UnhandledDataReceived;
 
         /// <summary>
         ///     Fires when the client is connected and authenticated to the remote server.
@@ -142,20 +154,18 @@ namespace IRCSharp
 
             new Thread(() =>
             {
-                using (var reader = new StreamReader(_tcp.GetStream()))
+                using var reader = new StreamReader(_tcp.GetStream());
+                while (_tcp.Connected)
                 {
-                    while (_tcp.Connected)
+                    try
                     {
-                        try
-                        {
-                            var data = reader.ReadLine();
+                        var data = reader.ReadLine();
 
-                            DataReceived?.Invoke(data);
-                        }
-                        catch (IOException)
-                        {
-                            break;
-                        }
+                        DataReceived?.Invoke(data);
+                    }
+                    catch (IOException)
+                    {
+                        break;
                     }
                 }
             }).Start();
@@ -263,12 +273,12 @@ namespace IRCSharp
                         }
 
                         var channelUser = new ChannelUser(this, user, channel);
-                        if (!channel._users.Any(x => x == user))
+                        if (channel._users.All(x => x != user))
                         {
                             channel._users.Add(channelUser);
                         }
 
-                        if (!user._channels.Any(x => x == channel))
+                        if (user._channels.All(x => x != channel))
                         {
                             user._channels.Add(channel);
                         }
@@ -581,6 +591,11 @@ namespace IRCSharp
 
                         return;
                     }
+                default:
+                    {
+                        UnhandledDataReceived?.Invoke(data);
+                        return;
+                    }
             }
         }
 
@@ -858,7 +873,7 @@ namespace IRCSharp
                         var channels = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         foreach (var chan in channels)
                         {
-                            var name = chan.Substring(chan.IndexOf("#"));
+                            var name = chan.Substring(chan.IndexOf("#", StringComparison.Ordinal));
                             if (!_cachedChannels.TryGetValue(name, out var channel))
                             {
                                 channel = new Channel(this)
@@ -877,7 +892,7 @@ namespace IRCSharp
                             }
                             else
                             {
-                                channelUser = channel._users.FirstOrDefault(x => x == user);
+                                channelUser = channel._users.First(x => x == user);
                             }
 
                             if (!user._channels.Contains(channel))
@@ -885,23 +900,20 @@ namespace IRCSharp
                                 user._channels.Add(channel);
                             }
 
-                            switch (chan[0])
+                            channelUser.Privileges = chan[0] switch
                             {
-                                case '#':
-                                    channelUser.Privileges = ChannelPrivilege.Normal;
-                                    break;
-                                case '@':
-                                    channelUser.Privileges = ChannelPrivilege.Operator;
-                                    break;
-                                case '+':
-                                    channelUser.Privileges = ChannelPrivilege.Voice;
-                                    break;
-                                default:
-                                    channelUser.Privileges = ChannelPrivilege.Unknown;
-                                    break;
-                            }
+                                '#' => ChannelPrivilege.Normal,
+                                '@' => ChannelPrivilege.Operator,
+                                '+' => ChannelPrivilege.Voice,
+                                _ => ChannelPrivilege.Unknown
+                            };
                         }
 
+                        return;
+                    }
+                default:
+                    {
+                        UnhandledDataReceived?.Invoke(raw);
                         return;
                     }
             }

@@ -38,13 +38,13 @@ namespace IRCSharp
         ///     Indicates whether <see cref="IRCClient"/> must throw on timeout. 
         ///     When set to false, it will try to reconnect.
         /// </summary>
-        public bool ThrowsOnTimeout { get; set; }
+        public bool ThrowsOnTimeout { get; set; } = false;
 
         /// <summary>
         ///     Defines the amount of time to wait before considering the
         ///     connection with the remote server has been lost.
         /// </summary>
-        public TimeSpan Timeout { get; set; }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
         /// <summary>
         ///     Host sent by the server.
