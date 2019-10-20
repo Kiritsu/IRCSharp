@@ -1,0 +1,31 @@
+RPL_AWAY
+RPL_NO_AWAY
+RPL_WHOIS_USER Nickname User Host RealName
+RPL_WHOIS_SERVER Nickname Server ServerInfo
+RPL_WHOIS_OPERATOR Nickname
+RPL_WHOIS_IDLE Nickname Seconds
+RPL_WHOIS_CHANNELS Nickname Channels
+RPL_WHOWAS_USER Nickname User Host RealName
+RPL_LIST Channel UserCount Topic
+RPL_UNIQ_OP_IS Channel Nickname
+RPL_CHANNEL_MODE_IS Channel Mode ModeParams
+RPL_NO_TOPIC Channel
+RPL_TOPIC Channel Topic
+RPL_INVITING Channel Nickname
+RPL_SUMMONING Nickname
+RPL_INVITE_LIST Channel InviteMask
+RPL_EXCEPT_LIST Channel ExceptionMask
+RPL_VERSION Version DebugLevel Server Comment
+RPL_WHO_REPLY Channel User Host Server Args HopCount RealName
+RPL_LINKS Mask Server HopCount ServerInfo
+RPL_BANLIST Channel BanMask
+RPL_INFO Text
+RPL_MOTD_START Server
+RPL_MOTD Text
+RPL_YOU_ARE_OPER
+RPL_REHASHING ConfigFile
+RPL_YOU_ARE_SERVICE
+RPL_TIME Server LocalServerTime
+RPL_USER_START
+RPL_USERS Username TtyLine Hostname
+RPL_NO_USERS

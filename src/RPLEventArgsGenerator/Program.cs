@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,31 +15,49 @@ namespace RPLEventArgsGenerator
                 Directory.CreateDirectory("./EventArgs");
             }
             
-            var template = File.ReadAllText("./RPLTemplate.txt");
+            var template = File.ReadAllText("./RplTemplate.txt");
+            var rawRpl = File.ReadAllLines("./RplCustoms.txt");
+            
             var regexes = typeof(RegexConsts).GetFields();
             
-            for (var i = 0; i < args.Length; i++)
+            for (var i = 0; i < regexes.Length; i++)
             {
-                var rplName = ToConventionReadable(args[i]);
-                if (regexes.Any(x => x.Name == args[i]))
+                var rplName = ToConventionReadable(regexes[i].Name);
+                var regex = ((Regex) regexes[i].GetValue(null));
+                
+                var groups = regex.GetGroupNames();
+                var properties = new StringBuilder();
+                foreach (var group in groups)
                 {
-                    var rightRegex = regexes.First(x => x.Name == args[i]);
-                    var regex = ((Regex) rightRegex.GetValue(null));
-                    var groups = regex.GetGroupNames();
-                    var properties = new StringBuilder();
-                    foreach (var group in groups)
+                    if (@group == "0") // ?.?
                     {
-                        if (group == "0") // ?.?
-                        {
-                            continue;
-                        }
-                        
-                        var groupPropertyName = ToConventionReadable(group);
-                        properties.Append($"        public string ").Append(groupPropertyName).AppendLine(" { get; internal set; }");
+                        continue;
                     }
-                    
-                    File.WriteAllText($"./EventArgs/{rplName}EventArgs.cs", template.Replace("{0}", rplName).Replace("{1}", properties.ToString()));
+                        
+                    var groupPropertyName = ToConventionReadable(@group);
+                    properties.Append($"        public string ").Append(groupPropertyName).AppendLine(" { get; internal set; }");
                 }
+                    
+                File.WriteAllText($"./EventArgs/{rplName}EventArgs.cs", template.Replace("{0}", rplName).Replace("{1}", properties.ToString()));
+            }
+
+            for (var i = 0; i < rawRpl.Length; i++)
+            {
+                var content = rawRpl[i].Split(' ');
+                var rplName = ToConventionReadable(content[0]);
+                
+                if (content.Length <= 1)
+                {
+                    continue;
+                }
+                
+                var properties = new StringBuilder();
+                foreach (var arg in content.Skip(1))
+                {
+                    properties.Append($"        public string ").Append(arg).AppendLine(" { get; internal set; }");
+                }
+                
+                File.WriteAllText($"./EventArgs/{rplName}EventArgs.cs", template.Replace("{0}", rplName).Replace("{1}", properties.ToString()));
             }
         }
 
