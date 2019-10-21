@@ -12,13 +12,6 @@ using IRCSharp.Entities.Models;
 using IRCSharp.EventArgs;
 using IRCSharp.Services;
 
-// ReSharper disable ForCanBeConvertedToForeach
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
-// ReSharper disable EventNeverSubscribedTo.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace IRCSharp
 {
     public sealed class IRCClient
@@ -45,6 +38,11 @@ namespace IRCSharp
         /// </summary>
         public ReadOnlyDictionary<string, Channel> Channels { get; private set; }
 
+        /// <summary>
+        ///     Gets the different server informations.
+        /// </summary>
+        public ServerInfo ServerInfo { get; private set; }
+        
         /// <summary>
         ///     Fires when data is received.
         /// </summary>
@@ -101,6 +99,26 @@ namespace IRCSharp
         public event Action<UserKickedEventArgs> UserKicked;
 
         /// <summary>
+        ///     Fires when RPL_YOURHOST (002) has been received.
+        /// </summary>
+        public event Action<RplYourHostEventArgs> RplYourHostReceived;
+
+        /// <summary>
+        ///     Fires when RPL_CREATED (003) has been received.
+        /// </summary>
+        public event Action<RplCreatedEventArgs> RplCreatedReceived;
+
+        /// <summary>
+        ///     Fires when RPL_MYINFO (004) has been received.
+        /// </summary>
+        public event Action<RplMyInfoEventArgs> RplMyInfoReceived;
+
+        /// <summary>
+        ///     Fires when RPL_BOUNCE (005) has been received.
+        /// </summary>
+        public event Action<RplBounceEventArgs> RplBounceReceived;
+
+        /// <summary>
         ///     True when authenticated to the remote server.
         /// </summary>
         public bool Connected { get; private set; }
@@ -118,7 +136,8 @@ namespace IRCSharp
             DataReceived += OnDataReceived;
 
             _configuration = new IRCConfiguration(configuration);
-
+            ServerInfo = new ServerInfo();
+            
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
             Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
@@ -199,6 +218,8 @@ namespace IRCSharp
 
         private void Reset()
         {
+            ServerInfo = new ServerInfo();
+            
             _tcp = new TcpClient();
             _cachedUsers = new ConcurrentDictionary<string, User>();
             Users = new ReadOnlyDictionary<string, User>(_cachedUsers);
@@ -632,16 +653,110 @@ namespace IRCSharp
                     Send($"WHOIS {_configuration.Host ?? username} {username}");
                     break;
 
-                case 5:
-                    var chanModes = data.FirstOrDefault(x => x.StartsWith("CHANMODES="))?.Split('=')[1];
-                    if (chanModes == null)
+                case 2:
                     {
-                        return;
+                        var match = RegexConsts.RPL_YOUR_HOST.Match(content);
+                        if (!match.Success)
+                        {
+                            break;
+                        }
+
+                        var version = match.Groups["version"].Value;
+                        var serverName = match.Groups["server_name"].Value;
+
+                        ServerInfo.Version = version;
+                        ServerInfo.Host = serverName;
+
+                        RplYourHostReceived?.Invoke(new RplYourHostEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Version = version,
+                            ServerName = serverName
+                        });
+                        break;
                     }
 
-                    var complexChanModes = chanModes.Split(',').Where(x => x.Length == 1);
-                    _configuration.ComplexChanModes = complexChanModes.Select(x => x[0]).ToArray();
-                    break;
+                case 3:
+                    {
+                        var match = RegexConsts.RPL_CREATED.Match(content);
+                        if (!match.Success)
+                        {
+                            break;
+                        }
+
+                        var date = match.Groups["date"].Value;
+
+                        ServerInfo.CreationDate = date;
+
+                        RplCreatedReceived?.Invoke(new RplCreatedEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Date = date
+                        });
+                        break;
+                    }
+                
+                case 4:
+                    {
+                        var match = RegexConsts.RPL_MY_INFO.Match(content);
+                        if (!match.Success)
+                        {
+                            break;
+                        }
+
+                        var serverName = match.Groups["server_name"].Value;
+                        var version = match.Groups["version"].Value;
+                        var userModes = match.Groups["user_modes"].Value;
+                        var channelModes = match.Groups["channel_modes"].Value;
+                        var unsupportedModes = match.Groups["unknown"].Success ? match.Groups["unknown"].Value : "";
+
+                        ServerInfo.UserModes = userModes;
+                        ServerInfo.ChannelModes = channelModes;
+                        ServerInfo.UnsupportedModes = unsupportedModes;
+                        
+                        RplMyInfoReceived?.Invoke(new RplMyInfoEventArgs
+                        {
+                            Client = this,
+                            CurrentUser = CurrentUser,
+                            Version = version,
+                            ChannelModes = channelModes,
+                            ServerName = serverName,
+                            UserModes = userModes,
+                            UnsupportedModes = unsupportedModes
+                        });
+                        break;
+                    }
+
+                case 5:
+                    {
+                        var match = RegexConsts.RPL_BOUNCE.Match(content);
+                        if (!match.Success)
+                        {
+                            var chanModes = data.FirstOrDefault(x => x.StartsWith("CHANMODES="))?.Split('=')[1];
+                            if (chanModes == null)
+                            {
+                                return;
+                            }
+
+                            var complexChanModes = chanModes.Split(',').Where(x => x.Length == 1);
+                            _configuration.ComplexChanModes = complexChanModes.Select(x => x[0]).ToArray();
+                            break;   
+                        }
+
+                        var serverName = match.Groups["server_name"].Value;
+                        var port = match.Groups["port"].Value;
+                        
+                        RplBounceReceived?.Invoke(new RplBounceEventArgs
+                        {
+                            Client = this, 
+                            CurrentUser = CurrentUser,
+                            ServerName = serverName,
+                            Port = port
+                        });
+                        break;
+                    }
 
                 case 311:
                     {

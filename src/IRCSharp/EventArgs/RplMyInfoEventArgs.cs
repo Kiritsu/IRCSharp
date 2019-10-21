@@ -7,6 +7,7 @@ namespace IRCSharp.EventArgs
         public string Version { get; internal set; }
         public string UserModes { get; internal set; }
         public string ChannelModes { get; internal set; }
+        public string UnsupportedModes { get; internal set; }
 
         internal RplMyInfoEventArgs()
         {

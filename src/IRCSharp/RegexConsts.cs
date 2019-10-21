@@ -25,7 +25,7 @@ namespace IRCSharp
         
         //004
         public static readonly Regex RPL_MY_INFO = new Regex(
-            "^(?<server_name>[^\\s]+) (?<version>[^\\s]+) (?<user_modes>[^\\s]+) (?<channel_modes>[^\\s]+)$", 
+            "^(?<server_name>[^\\s]+) (?<version>[^\\s]+) (?<user_modes>[^\\s]+) (?<channel_modes>[^\\s]+) (?<unknown>.*)$", 
             Options);
         
         //005
