@@ -70,6 +70,7 @@ namespace IRCSharp
                         
                         if (!IncompletePacketBuffer.IsEmpty && IncompletePacketBuffer.Length > 0)
                         {
+                            // create method to check if memory region is filled with 0s and take **right** length of it
                             var memory = new Memory<byte>(new byte[subBuffer.Length + IncompletePacketBuffer.Length]);
                             IncompletePacketBuffer.CopyTo(memory);
                             for (var i = 0; i < subBuffer.Span.Length; i++)
@@ -96,6 +97,8 @@ namespace IRCSharp
 
         private async Task HandlePacketAsync(ReadOnlyMemory<byte> packet)
         {
+            var str = Encoding.UTF8.GetString(packet.Span);
+            Console.WriteLine(str);
         }
 
         public async Task SetNicknameAsync(string nickname)
