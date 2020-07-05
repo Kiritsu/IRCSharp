@@ -8,7 +8,6 @@ namespace IRCSharp
     public class IRCClient : IDisposable
     {
         private const int MessageBufferSize = 0x200;
-        private const int NicknamePacketBufferSize = 0x20;
 
         private static readonly Memory<byte> NicknamePacketBuffer;
         private static readonly Memory<byte> PassPacketBuffer;
@@ -54,6 +53,7 @@ namespace IRCSharp
                 {
                     try
                     {
+                        ReceiveBuffer.Span.Clear();
                         await _socket.ReceiveAsync(ReceiveBuffer, SocketFlags.None).ConfigureAwait(false);
                         var content = Encoding.UTF8.GetString(ReceiveBuffer.Span);
                         Console.Write(content);
@@ -68,14 +68,13 @@ namespace IRCSharp
 
         public async Task SetNicknameAsync(string nickname)
         {
-            var memory = nickname.AsMemory();
-            if (memory.Length > NicknamePacketBufferSize)
+            if (string.IsNullOrWhiteSpace(nickname))
             {
-                memory = memory.Slice(0, NicknamePacketBufferSize);
+                throw new ArgumentException("Nickname cannot be null or empty.", nameof(nickname));
             }
 
             await SendBytesAsync(NicknamePacketBuffer).ConfigureAwait(false);
-            await SendAsync(memory).ConfigureAwait(false);
+            await SendAsync(nickname.AsMemory()).ConfigureAwait(false);
             await SendEndOfLineAsync().ConfigureAwait(false);
         }
 
