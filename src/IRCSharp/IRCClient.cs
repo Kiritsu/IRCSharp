@@ -11,23 +11,24 @@ namespace IRCSharp
 
         private static readonly Memory<byte> NicknamePacketBuffer;
         private static readonly Memory<byte> PassPacketBuffer;
-
         private static readonly Memory<byte> EndOfLineBuffer;
-        private static readonly Memory<byte> SendBuffer;
-        private static readonly Memory<byte> ReceiveBuffer;
-        
+
+        private static readonly Memory<byte> IncompletePacketBuffer;
+
+        private readonly Memory<byte> _sendBuffer;
+        private readonly Memory<byte> _receiveBuffer;
+
         private readonly IRCConfiguration _configuration;
         private readonly Socket _socket;
 
         static IRCClient()
         {
-            SendBuffer = new Memory<byte>(new byte[MessageBufferSize]);
-            ReceiveBuffer = new Memory<byte>(new byte[MessageBufferSize]);
             EndOfLineBuffer = new[] {(byte) '\n'};
             NicknamePacketBuffer = new[] {(byte) 'N', (byte) 'I', (byte) 'C', (byte) 'K', (byte) ' '};
             PassPacketBuffer = new[] {(byte) 'P', (byte) 'A', (byte) 'S', (byte) 'S', (byte) ' '};
+            IncompletePacketBuffer = new Memory<byte>(new byte[MessageBufferSize]);
         }
-        
+
         public IRCClient(IRCConfiguration configuration)
         {
             if (configuration is null)
@@ -35,11 +36,14 @@ namespace IRCSharp
 
             if (configuration.Hostname is null)
                 throw new ArgumentNullException(nameof(configuration.Hostname), "Hostname must not be null.");
-            
+
             configuration.Nickname ??= "user";
 
             _configuration = configuration;
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            _sendBuffer = new Memory<byte>(new byte[MessageBufferSize]);
+            _receiveBuffer = new Memory<byte>(new byte[MessageBufferSize]);
         }
 
         public async Task ConnectAsync()
@@ -51,19 +55,47 @@ namespace IRCSharp
             {
                 while (_socket.Connected)
                 {
-                    try
+                    _receiveBuffer.Span.Clear();
+                    await _socket.ReceiveAsync(_receiveBuffer, SocketFlags.None).ConfigureAwait(false);
+
+                    var index = 0;
+                    int packetEndIndex;
+                    var subBuffer = new Memory<byte>(new byte[_receiveBuffer.Length]);
+                    _receiveBuffer.CopyTo(subBuffer);
+                    do
                     {
-                        ReceiveBuffer.Span.Clear();
-                        await _socket.ReceiveAsync(ReceiveBuffer, SocketFlags.None).ConfigureAwait(false);
-                        var content = Encoding.UTF8.GetString(ReceiveBuffer.Span);
-                        Console.Write(content);
-                    }
-                    catch (Exception e)
+                        packetEndIndex = subBuffer.Span.IndexOf(EndOfLineBuffer.Span);
+                        subBuffer = _receiveBuffer.Slice(index, packetEndIndex);
+                        index += packetEndIndex;
+                        
+                        if (!IncompletePacketBuffer.IsEmpty && IncompletePacketBuffer.Length > 0)
+                        {
+                            var memory = new Memory<byte>(new byte[subBuffer.Length + IncompletePacketBuffer.Length]);
+                            IncompletePacketBuffer.CopyTo(memory);
+                            for (var i = 0; i < subBuffer.Span.Length; i++)
+                            {
+                                memory.Span.Fill(subBuffer.Span[i]);
+                            }
+
+                            await HandlePacketAsync(memory);
+                        }
+                        else
+                        {
+                            await HandlePacketAsync(subBuffer);   
+                        }
+                    } while (packetEndIndex != -1);
+
+                    if (index < _receiveBuffer.Length)
                     {
-                        Console.WriteLine(e);
+                        var unfinishedPacket = _receiveBuffer.Slice(index, _receiveBuffer.Length - index);
+                        unfinishedPacket.CopyTo(IncompletePacketBuffer);
                     }
                 }
             });
+        }
+
+        private async Task HandlePacketAsync(ReadOnlyMemory<byte> packet)
+        {
         }
 
         public async Task SetNicknameAsync(string nickname)
@@ -99,13 +131,13 @@ namespace IRCSharp
 
         private async Task SendAsync(ReadOnlyMemory<char> message)
         {
-            Encoding.UTF8.GetBytes(message.Span, SendBuffer.Span);
-            await SendBytesAsync(SendBuffer).ConfigureAwait(false);
+            Encoding.UTF8.GetBytes(message.Span, _sendBuffer.Span);
+            await SendBytesAsync(_sendBuffer).ConfigureAwait(false);
         }
 
-        private async Task SendBytesAsync(ReadOnlyMemory<byte> message)
+        private ValueTask<int> SendBytesAsync(ReadOnlyMemory<byte> message)
         {
-            await _socket.SendAsync(message, SocketFlags.None).ConfigureAwait(false);
+            return _socket.SendAsync(message, SocketFlags.None);
         }
 
         public void Dispose()
