@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,26 +9,19 @@ namespace IRCSharp
     {
         private const int MessageBufferSize = 0x200;
 
-        private static readonly Memory<byte> NicknamePacketBuffer;
-        private static readonly Memory<byte> PassPacketBuffer;
-        private static readonly Memory<byte> EndOfLineBuffer;
-
-        private static readonly Memory<byte> IncompletePacketBuffer;
-
         private readonly Memory<byte> _sendBuffer;
         private readonly Memory<byte> _receiveBuffer;
 
         private readonly IRCConfiguration _configuration;
         private readonly Socket _socket;
 
-        static IRCClient()
-        {
-            EndOfLineBuffer = new[] {(byte) '\n'};
-            NicknamePacketBuffer = new[] {(byte) 'N', (byte) 'I', (byte) 'C', (byte) 'K', (byte) ' '};
-            PassPacketBuffer = new[] {(byte) 'P', (byte) 'A', (byte) 'S', (byte) 'S', (byte) ' '};
-            IncompletePacketBuffer = new Memory<byte>(new byte[MessageBufferSize]);
-        }
+        private readonly Memory<byte> _incompletePacketBuffer;
 
+        /// <summary>
+        ///     Creates a new IRCClient.
+        /// </summary>
+        /// <param name="configuration">Configuration of the client.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the configuration is malformed.</exception>
         public IRCClient(IRCConfiguration configuration)
         {
             if (configuration is null)
@@ -42,10 +35,14 @@ namespace IRCSharp
             _configuration = configuration;
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            _sendBuffer = new Memory<byte>(new byte[MessageBufferSize]);
-            _receiveBuffer = new Memory<byte>(new byte[MessageBufferSize]);
+            _sendBuffer = new byte[MessageBufferSize];
+            _receiveBuffer = new byte[MessageBufferSize];
+            _incompletePacketBuffer = new byte[MessageBufferSize];
         }
 
+        /// <summary>
+        ///     Asynchronously connects and authenticates to the remote server.
+        /// </summary>
         public async Task ConnectAsync()
         {
             await _socket.ConnectAsync(_configuration.Hostname, _configuration.Port).ConfigureAwait(false);
@@ -58,47 +55,33 @@ namespace IRCSharp
                     _receiveBuffer.Span.Clear();
                     await _socket.ReceiveAsync(_receiveBuffer, SocketFlags.None).ConfigureAwait(false);
 
-                    var index = 0;
-                    int packetEndIndex;
-                    var subBuffer = new Memory<byte>(new byte[_receiveBuffer.Length]);
-                    _receiveBuffer.CopyTo(subBuffer);
+                    var offset = 0;
                     do
                     {
-                        packetEndIndex = subBuffer.Span.IndexOf(EndOfLineBuffer.Span);
-                        subBuffer = _receiveBuffer.Slice(index, packetEndIndex);
-                        index += packetEndIndex;
-                        
-                        if (!IncompletePacketBuffer.IsEmpty && IncompletePacketBuffer.Length > 0)
-                        {
-                            // create method to check if memory region is filled with 0s and take **right** length of it
-                            var memory = new Memory<byte>(new byte[subBuffer.Length + IncompletePacketBuffer.Length]);
-                            IncompletePacketBuffer.CopyTo(memory);
-                            for (var i = 0; i < subBuffer.Span.Length; i++)
-                            {
-                                memory.Span.Fill(subBuffer.Span[i]);
-                            }
+                        var packetEnd = _receiveBuffer.Span.Slice(offset)
+                            .IndexOf(PacketHelpers.LineEnding.Span);
 
-                            await HandlePacketAsync(memory);
-                        }
-                        else
+                        if (packetEnd == -1)
                         {
-                            await HandlePacketAsync(subBuffer);   
-                        }
-                    } while (packetEndIndex != -1);
+                            // no complete packet, copy incomplete one for future concat
+                            _incompletePacketBuffer.Span.Clear();
+                            _receiveBuffer.Span.Slice(offset).CopyTo(_incompletePacketBuffer.Span[..]);
 
-                    if (index < _receiveBuffer.Length)
-                    {
-                        var unfinishedPacket = _receiveBuffer.Slice(index, _receiveBuffer.Length - index);
-                        unfinishedPacket.CopyTo(IncompletePacketBuffer);
-                    }
+                            break;
+                        }
+
+                        var packet = MemoryHelpers.Concat<byte>(
+                            // cannot fail
+                            _incompletePacketBuffer.Slice(0,
+                                _incompletePacketBuffer.Span.IndexOf(PacketHelpers.ByteZero.Span)),
+                            _receiveBuffer.Slice(offset, packetEnd));
+
+                        offset += packetEnd + 1;
+
+                        await HandlePacketAsync(packet).ConfigureAwait(false);
+                    } while (true);
                 }
             });
-        }
-
-        private async Task HandlePacketAsync(ReadOnlyMemory<byte> packet)
-        {
-            var str = Encoding.UTF8.GetString(packet.Span);
-            Console.WriteLine(str);
         }
 
         public async Task SetNicknameAsync(string nickname)
@@ -108,16 +91,24 @@ namespace IRCSharp
                 throw new ArgumentException("Nickname cannot be null or empty.", nameof(nickname));
             }
 
-            await SendBytesAsync(NicknamePacketBuffer).ConfigureAwait(false);
+            await SendBytesAsync(PacketHelpers.NicknamePacketHeader).ConfigureAwait(false);
             await SendAsync(nickname.AsMemory()).ConfigureAwait(false);
             await SendEndOfLineAsync().ConfigureAwait(false);
         }
 
+        private Task HandlePacketAsync(ReadOnlyMemory<byte> packet)
+        {
+            var str = Encoding.UTF8.GetString(packet.Span);
+            Console.WriteLine(str);
+
+            return Task.CompletedTask;
+        }
+        
         private async Task SendAuthenticationAsync()
         {
             if (!string.IsNullOrWhiteSpace(_configuration.Password))
             {
-                await SendBytesAsync(PassPacketBuffer).ConfigureAwait(false);
+                await SendBytesAsync(PacketHelpers.PassPacketHeader).ConfigureAwait(false);
                 await SendAsync(_configuration.Password.AsMemory()).ConfigureAwait(false);
                 await SendEndOfLineAsync().ConfigureAwait(false);
             }
@@ -127,15 +118,15 @@ namespace IRCSharp
                 .ConfigureAwait(false);
         }
 
-        private async Task SendEndOfLineAsync()
+        private ValueTask<int> SendEndOfLineAsync()
         {
-            await SendBytesAsync(EndOfLineBuffer).ConfigureAwait(false);
+            return SendBytesAsync(PacketHelpers.LineEnding);
         }
 
-        private async Task SendAsync(ReadOnlyMemory<char> message)
+        private ValueTask<int> SendAsync(ReadOnlyMemory<char> message)
         {
             Encoding.UTF8.GetBytes(message.Span, _sendBuffer.Span);
-            await SendBytesAsync(_sendBuffer).ConfigureAwait(false);
+            return SendBytesAsync(_sendBuffer);
         }
 
         private ValueTask<int> SendBytesAsync(ReadOnlyMemory<byte> message)
@@ -143,6 +134,7 @@ namespace IRCSharp
             return _socket.SendAsync(message, SocketFlags.None);
         }
 
+        /// <inheritdoc cref="IDisposable.Dispose"/>
         public void Dispose()
         {
             _socket.Dispose();
