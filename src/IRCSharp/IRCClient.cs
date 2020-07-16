@@ -64,7 +64,6 @@ namespace IRCSharp
                         if (packetEnd == -1)
                         {
                             // no complete packet, copy incomplete one for future concat
-                            _incompletePacketBuffer.Span.Clear();
                             _receiveBuffer.Span.Slice(offset).CopyTo(_incompletePacketBuffer.Span[..]);
 
                             break;
@@ -79,6 +78,9 @@ namespace IRCSharp
                         offset += packetEnd + 1;
 
                         await HandlePacketAsync(packet).ConfigureAwait(false);
+                        
+                        // clear handled incomplete packet.
+                        _incompletePacketBuffer.Span.Clear();
                     } while (true);
                 }
             });
