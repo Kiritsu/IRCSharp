@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace IrcSharp.Internal;
 
-public interface IIrcMessageReader
+internal interface IIrcMessageReader
 {
     IAsyncEnumerable<RawIrcMessage> ReadMessagesAsync(
         int maximumMessageSize = Consts.StandardMaximumMessageSize,

@@ -4,7 +4,7 @@ using Microsoft.Extensions.ObjectPool;
 
 namespace IrcSharp.Internal;
 
-public sealed class RawIrcMessage : IResettable
+internal sealed class RawIrcMessage : IResettable
 {
     private byte[]? _buffer;
     private ushort _length;
