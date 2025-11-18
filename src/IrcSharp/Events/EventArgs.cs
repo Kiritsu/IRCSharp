@@ -1,5 +1,10 @@
-﻿namespace IrcSharp.Events;
+﻿using IrcSharp.Attributes;
 
+namespace IrcSharp.Events;
+
+[IrcSharpEvent("Empty2")]
+[IrcSharpEvent("UnknownMessage2", "string:Message")]
+[IrcSharpEvent("Ping2", "string?:TrailingValue")]
 public abstract class EventArgs;
 
 public sealed class EmptyEventArgs : EventArgs
