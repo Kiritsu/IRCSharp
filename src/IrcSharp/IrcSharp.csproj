@@ -5,11 +5,14 @@
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AnalysisMode>All</AnalysisMode>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
-    
+
+    <ItemGroup>
+        <ProjectReference Include="..\IrcSharp.SourceGenerators\IrcSharp.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
     <ItemGroup>
         <InternalsVisibleTo Include="IrcSharp.Tests" />
         <InternalsVisibleTo Include="IrcSharp.Benchmark" />
@@ -20,11 +23,4 @@
       <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <ProjectReference Include="..\IrcSharp.SourceGenerators\IrcSharp.SourceGenerators.csproj" 
-                        OutputItemType="Analyzer" 
-                        ReferenceOutputAssembly="false" />
-    </ItemGroup>
-
 </Project>

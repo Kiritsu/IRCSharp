@@ -40,7 +40,7 @@ public class EventArgsGenerator : IIncrementalGenerator
                             continue;
                         }
 
-                        if (attributeData.ConstructorArguments is [_, { Values.Length: 0 } _])
+                        if (attributeData.ConstructorArguments is [_, { Values.Length: 0 } _, ..])
                         {
                             attributes.Add(AttributeData.Create(eventName, null));
                             continue;
@@ -180,7 +180,7 @@ public class EventArgsGenerator : IIncrementalGenerator
     }
 }
 
-internal sealed record AttributeData(string EventName, (string Type, string ParameterName)[]? Parameters)
+internal sealed class AttributeData(string eventName, (string Type, string ParameterName)[]? parameters)
 {
     public static AttributeData Create(string eventName, string[]? parameterNames)
     {
@@ -190,4 +190,8 @@ internal sealed record AttributeData(string EventName, (string Type, string Para
             return (splittedParameter[0], splittedParameter[1]);
         }).ToArray());
     }
+
+    public string EventName { get; } = eventName;
+    
+    public (string Type, string ParameterName)[]? Parameters { get; } = parameters;
 }
