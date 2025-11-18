@@ -40,10 +40,10 @@ public class IrcMessageBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
-        _simpleMessage.Dispose();
-        _withPrefixAndParams.Dispose();
-        _completeMessage.Dispose();
-        _longCompleteMessage.Dispose();
+        IrcMessagePool.Return(_simpleMessage);
+        IrcMessagePool.Return(_withPrefixAndParams);
+        IrcMessagePool.Return(_completeMessage);
+        IrcMessagePool.Return(_longCompleteMessage);
     }
 
     private void SetupMessagePool()
@@ -92,7 +92,7 @@ public class IrcMessageBenchmarks
         var bytes = Encoding.UTF8.GetBytes(SimpleMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
         var message = IrcMessagePool.Rent(sequence);
-        message.Dispose();
+        IrcMessagePool.Return(message);
     }
 
     [Benchmark]
@@ -101,7 +101,7 @@ public class IrcMessageBenchmarks
         var bytes = Encoding.UTF8.GetBytes(CompleteMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
         var message = IrcMessagePool.Rent(sequence);
-        message.Dispose();
+        IrcMessagePool.Return(message);
     }
 
     [Benchmark]
@@ -110,7 +110,7 @@ public class IrcMessageBenchmarks
         var bytes = Encoding.UTF8.GetBytes(LongCompleteMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
         var message = IrcMessagePool.Rent(sequence);
-        message.Dispose();
+        IrcMessagePool.Return(message);
     }
 
     #endregion
@@ -306,8 +306,9 @@ public class IrcMessageBenchmarks
     {
         var bytes = Encoding.UTF8.GetBytes(SimpleMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
-        using var message = IrcMessagePool.Rent(sequence);
+        var message = IrcMessagePool.Rent(sequence);
         _ = message.GetCommand();
+        IrcMessagePool.Return(message);
     }
 
     [Benchmark]
@@ -315,12 +316,13 @@ public class IrcMessageBenchmarks
     {
         var bytes = Encoding.UTF8.GetBytes(CompleteMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
-        using var message = IrcMessagePool.Rent(sequence);
+        var message = IrcMessagePool.Rent(sequence);
         _ = message.GetTags();
         _ = message.GetPrefix();
         _ = message.GetCommand();
         _ = message.GetParams();
         _ = message.GetTrailing();
+        IrcMessagePool.Return(message);
     }
 
     [Benchmark]
@@ -328,12 +330,13 @@ public class IrcMessageBenchmarks
     {
         var bytes = Encoding.UTF8.GetBytes(LongCompleteMessage);
         var sequence = new ReadOnlySequence<byte>(bytes);
-        using var message = IrcMessagePool.Rent(sequence);
+        var message = IrcMessagePool.Rent(sequence);
         _ = message.GetTags();
         _ = message.GetPrefix();
         _ = message.GetCommand();
         _ = message.GetParams();
         _ = message.GetTrailing();
+        IrcMessagePool.Return(message);
     }
 
     #endregion
@@ -352,7 +355,7 @@ public class IrcMessageBenchmarks
             var bytes = Encoding.UTF8.GetBytes(messageText);
             var sequence = new ReadOnlySequence<byte>(bytes);
             
-            using var message = IrcMessagePool.Rent(sequence);
+            var message = IrcMessagePool.Rent(sequence);
             
             // Parse all components (realistic usage)
             _ = message.GetTags();
@@ -362,6 +365,8 @@ public class IrcMessageBenchmarks
             _ = message.GetTrailing();
             
             totalBytes += bytes.Length;
+            
+            IrcMessagePool.Return(message);
         }
         
         return totalBytes;
@@ -379,12 +384,14 @@ public class IrcMessageBenchmarks
             var bytes = Encoding.UTF8.GetBytes(messageText);
             var sequence = new ReadOnlySequence<byte>(bytes);
             
-            using var message = IrcMessagePool.Rent(sequence);
+            var message = IrcMessagePool.Rent(sequence);
             
             // Only parse command (minimal parsing)
             _ = message.GetCommand();
             
             totalBytes += bytes.Length;
+            
+            IrcMessagePool.Return(message);
         }
         
         return totalBytes;
@@ -402,7 +409,7 @@ public class IrcMessageBenchmarks
             var bytes = Encoding.UTF8.GetBytes(messageText);
             var sequence = new ReadOnlySequence<byte>(bytes);
             
-            using var message = IrcMessagePool.Rent(sequence);
+            var message = IrcMessagePool.Rent(sequence);
             
             _ = message.GetTags();
             _ = message.GetPrefix();
@@ -411,6 +418,8 @@ public class IrcMessageBenchmarks
             _ = message.GetTrailing();
             
             totalBytes += bytes.Length;
+            
+            IrcMessagePool.Return(message);
         }
         
         return totalBytes;
@@ -428,7 +437,7 @@ public class IrcMessageBenchmarks
             var bytes = Encoding.UTF8.GetBytes(messageText);
             var sequence = new ReadOnlySequence<byte>(bytes);
             
-            using var message = IrcMessagePool.Rent(sequence);
+            var message = IrcMessagePool.Rent(sequence);
             
             _ = message.GetTags();
             _ = message.GetPrefix();
@@ -437,6 +446,8 @@ public class IrcMessageBenchmarks
             _ = message.GetTrailing();
             
             totalBytes += bytes.Length;
+            
+            IrcMessagePool.Return(message);
         }
         
         return totalBytes;
@@ -460,7 +471,7 @@ public class IrcMessageBenchmarks
             var bytes = preEncodedMessages[i % MessagePoolSize];
             var sequence = new ReadOnlySequence<byte>(bytes);
             
-            using var message = IrcMessagePool.Rent(sequence);
+            var message = IrcMessagePool.Rent(sequence);
             
             _ = message.GetTags();
             _ = message.GetPrefix();
@@ -469,6 +480,8 @@ public class IrcMessageBenchmarks
             _ = message.GetTrailing();
             
             totalBytes += bytes.Length;
+            
+            IrcMessagePool.Return(message);
         }
         
         return totalBytes;

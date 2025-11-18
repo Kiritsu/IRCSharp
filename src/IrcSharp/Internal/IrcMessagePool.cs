@@ -16,7 +16,6 @@ internal static class IrcMessagePool
 
     public static void Return(RawIrcMessage message)
     {
-        message.Reset();
         Pool.Return(message);
     }
 }

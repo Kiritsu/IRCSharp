@@ -1,9 +1,10 @@
 ﻿using System.Buffers;
 using System.Text;
+using Microsoft.Extensions.ObjectPool;
 
 namespace IrcSharp.Internal;
 
-public sealed class RawIrcMessage : IDisposable
+public sealed class RawIrcMessage : IResettable
 {
     private byte[]? _buffer;
     private ushort _length;
@@ -319,9 +320,10 @@ public sealed class RawIrcMessage : IDisposable
     {
         return Encoding.UTF8.GetString(AsSpan());
     }
-    
-    public void Dispose()
+
+    public bool TryReset()
     {
-        IrcMessagePool.Return(this);
+        Reset();
+        return true;
     }
 }

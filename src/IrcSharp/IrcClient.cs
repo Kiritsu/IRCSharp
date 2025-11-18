@@ -215,7 +215,7 @@ public sealed partial class IrcClient : IAsyncDisposable
             {
                 if (_ignoreUnknownMessages || OnUnknownMessage == null)
                 {
-                    message.Dispose();
+                    IrcMessagePool.Return(message);
                     continue;
                 }
                 
@@ -226,14 +226,14 @@ public sealed partial class IrcClient : IAsyncDisposable
             if (_waitForHandlersBeforeNextMessage)
             {
                 await handlerTask;
-                message.Dispose();
+                IrcMessagePool.Return(message);
             }
             else
             {
                 _ = Task.Run(async () =>
                 {
                     await handlerTask;
-                    message.Dispose();
+                    IrcMessagePool.Return(message);
                 }, cancellationToken);
             }
         }

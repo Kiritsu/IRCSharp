@@ -12,7 +12,7 @@ public sealed class RawIrcMessageTests : IDisposable
     {
         foreach (var message in _messages)
         {
-            message.Dispose();
+            IrcMessagePool.Return(message);
         }
         
         _messages.Clear();
