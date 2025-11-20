@@ -2,7 +2,7 @@
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 
-namespace IrcSharp.Internal;
+namespace IrcSharp.Internal.IO;
 
 internal interface IIrcMessageReader
 {

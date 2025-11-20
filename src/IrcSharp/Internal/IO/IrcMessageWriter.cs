@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Text;
 
-namespace IrcSharp.Internal;
+namespace IrcSharp.Internal.IO;
 
 internal interface IIrcMessageWriter
 {

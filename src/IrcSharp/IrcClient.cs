@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using IrcSharp.Events;
 using IrcSharp.Internal;
+using IrcSharp.Internal.IO;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -33,6 +34,8 @@ public sealed partial class IrcClient : IAsyncDisposable
     private readonly string? _password;
     private readonly string? _realname;
     private readonly string? _identd;
+
+    private readonly bool _parseServerCapabilities;
     
     private delegate Task HandlerDelegate(RawIrcMessage context, CancellationToken cancellationToken);
     private readonly FrozenDictionary<CommandKey, HandlerDelegate> _commandHandlers;
@@ -66,15 +69,25 @@ public sealed partial class IrcClient : IAsyncDisposable
     public event Func<PingEventArgs, CancellationToken, Task>? OnPing;
     
     /// <summary>
-    /// Triggered when a RPL_WELCOME message is received.
+    /// Triggered when a RPL_WELCOME (001) message is received.
     /// </summary>
     public event Func<EmptyEventArgs, CancellationToken, Task>? OnReady;
+    
+    /// <summary>
+    /// Triggered when a RPL_ISUPPORT (005) message is received.
+    /// </summary>
+    public event Func<ServerCapabilityEventArgs, CancellationToken, Task>? OnRplISupportReceived;
 #pragma warning restore CA1003
 
     /// <summary>
     /// Indicates whether the client is connected to the IRC Server.
     /// </summary>
-    public bool IsConnected { get; set; }
+    public bool IsConnected { get; private set; }
+
+    /// <summary>
+    /// Gets the server capabilities. Null if <see cref="IrcOptions.ParseServerCapabilities"/> is set to false.
+    /// </summary>
+    public IrcServerCapabilities? Capabilities { get; private set; }
 
     public IrcClient(ILogger<IrcClient> logger, IOptions<IrcOptions> options)
     {
@@ -93,10 +106,13 @@ public sealed partial class IrcClient : IAsyncDisposable
         _ignoreUnknownMessages = options.Value.IgnoreUnknownMessages;
         _maximumMessageSize = options.Value.MaximumMessageSize;
 
+        _parseServerCapabilities = options.Value.ParseServerCapabilities;
+        
         _commandHandlers = new Dictionary<CommandKey, HandlerDelegate>
         {
             [CommandKey.FromString("PING")] = HandlePingAsync,
-            [CommandKey.FromString("001")] = HandleRplWelcomeAsync
+            [CommandKey.FromString("001")] = HandleRplWelcomeAsync,
+            [CommandKey.FromString("005")] = HandleRplISupportAsync
         }.ToFrozenDictionary();
     }
 
@@ -279,15 +295,33 @@ public sealed partial class IrcClient : IAsyncDisposable
     private void SubscribeInternalHandlers()
     {
         OnPing += PongAsync;
+
+        if (_parseServerCapabilities)
+        {
+            OnRplISupportReceived += OnOnRplISupportReceived;
+        }
     }
 
     private void UnsubscribeInternalHandlers()
     {
         OnPing -= PongAsync;
+        
+        if (_parseServerCapabilities)
+        {
+            OnRplISupportReceived -= OnOnRplISupportReceived;
+        }
     }
     
     private Task PongAsync(PingEventArgs args, CancellationToken cancellationToken)
     {
         return this.PongAsync(args.TrailingValue, cancellationToken);
+    }
+    
+    private Task OnOnRplISupportReceived(ServerCapabilityEventArgs args, CancellationToken cancellationToken)
+    {
+        Capabilities ??= new IrcServerCapabilities();
+        Capabilities.Append(args.Capabilities);
+        
+        return Task.CompletedTask;
     }
 }

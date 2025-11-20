@@ -28,5 +28,10 @@ internal static class IrcMessageExtensions
         
             return string.Empty;
         }
+
+        public ParameterEnumerator EnumerateParameters()
+        {
+            return new ParameterEnumerator(@this.GetParams().ToArray());
+        }
     }
 }

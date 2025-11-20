@@ -65,4 +65,9 @@ public class IrcOptions
     /// The default value is <see cref="Consts.StandardMaximumMessageSize"/>. It can be overriden if the remote IRC server support longer messages.
     /// </remarks>
     public int MaximumMessageSize { get; set; } = Consts.StandardMaximumMessageSize;
+
+    /// <summary>
+    /// Gets or sets whether to parse the server capabilities.
+    /// </summary>
+    public bool ParseServerCapabilities { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using IrcSharp.Events;
+﻿using System.Text;
+using IrcSharp.Events;
 using IrcSharp.Internal;
 using IrcSharp.Internal.Extensions;
 using EventArgs = IrcSharp.Events.EventArgs;
@@ -21,6 +22,19 @@ public sealed partial class IrcClient
     {
         IsConnected = true;
         return InvokeHandlerAsync(OnReady, EmptyEventArgs.Instance, cancellationToken);
+    }
+    
+    private Task HandleRplISupportAsync(RawIrcMessage message, CancellationToken cancellationToken)
+    {
+        IsConnected = true;
+
+        var capabilities = new List<string>();
+        foreach (var capability in message.EnumerateParameters())
+        {
+            capabilities.Add(Encoding.UTF8.GetString(capability.Span));
+        }
+        
+        return InvokeHandlerAsync(OnRplISupportReceived, ServerCapabilityEventArgs.Create(capabilities), cancellationToken);
     }
     
     private Task InvokeHandlerAsync<TEventArgs>(
