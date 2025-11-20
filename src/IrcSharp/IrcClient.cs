@@ -155,7 +155,18 @@ public sealed partial class IrcClient : IAsyncDisposable
         return false;
     }
 
+    // todo: look for https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/performance/interpolated-string-handler
     public async Task SendRawMessageAsync(string message, CancellationToken cancellationToken = default)
+    {
+        if (_messageWriter == null)
+        {
+            throw new InvalidOperationException("The client is not connected or ready.");
+        }
+        
+        await _messageWriter.WriteAsync(message, _maximumMessageSize, cancellationToken).ConfigureAwait(false);
+    }
+    
+    public async Task SendRawMessageAsync(ReadOnlyMemory<char> message, CancellationToken cancellationToken = default)
     {
         if (_messageWriter == null)
         {

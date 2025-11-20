@@ -28,7 +28,7 @@ internal sealed class RawIrcMessage : IResettable
     {
         if (_buffer != null)
         {
-            ArrayPool<byte>.Shared.Return(_buffer);
+            ArrayPool<byte>.Shared.Return(_buffer, clearArray: false);
             _buffer = null;
         }
 
