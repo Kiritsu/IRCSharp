@@ -28,10 +28,11 @@ public sealed partial class IrcClient
     {
         IsConnected = true;
 
-        var capabilities = new List<string>();
-        foreach (var capability in message.EnumerateParameters())
+        var capabilities = new Dictionary<string, string?>();
+        foreach (var rawCapability in message.EnumerateParameters())
         {
-            capabilities.Add(Encoding.UTF8.GetString(capability.Span));
+            var (param1, param2) = rawCapability.ParseParameter();
+            capabilities.Add(param1, param2);
         }
         
         return InvokeHandlerAsync(OnRplISupportReceived, ServerCapabilityEventArgs.Create(capabilities), cancellationToken);

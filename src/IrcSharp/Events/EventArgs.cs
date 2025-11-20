@@ -5,5 +5,5 @@ namespace IrcSharp.Events;
 [IrcSharpEvent("Empty")]
 [IrcSharpEvent("UnknownMessage", "string:Message")]
 [IrcSharpEvent("Ping", "string?:TrailingValue")]
-[IrcSharpEvent("ServerCapability", "IReadOnlyList<string>:Capabilities")]
+[IrcSharpEvent("ServerCapability", "IReadOnlyDictionary<string, string?>:Capabilities")]
 public abstract class EventArgs;
