@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System.Text;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace IrcSharp.Playground;
@@ -7,20 +8,12 @@ public class IrcService(IrcClient client, ILogger<IrcService> logger) : Backgrou
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        client.OnReady += async (_, token) =>
-        {
-            await client.SendRawMessageAsync("JOIN :#testallan", token);
-        };
+        client.OnReady += (_, token) 
+            => client.SendRawMessageAsync("JOIN :#testallan", token);
 
-        client.OnPing += (_, token) =>
+        client.OnRawMessageReceived += (messageBytes, _) =>
         {
-            logger.LogInformation("Ping received");
-            return Task.CompletedTask;
-        };
-
-        client.OnUnknownMessage += (args, token) =>
-        {
-            logger.LogInformation("Received: {Message}", args.Message);
+            logger.LogInformation("Received: {Message}", Encoding.UTF8.GetString(messageBytes.Span));
             return Task.CompletedTask;
         };
         

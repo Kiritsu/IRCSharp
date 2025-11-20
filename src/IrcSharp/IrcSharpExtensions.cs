@@ -36,5 +36,14 @@ public static class IrcSharpExtensions
         
         public Task PartAsync(string channel, CancellationToken cancellationToken = default)
             => client.SendRawMessageAsync($"PART {channel}", cancellationToken);
+        
+        public Task PartAsync(IEnumerable<string> channels, CancellationToken cancellationToken = default)
+            => client.SendRawMessageAsync($"PART {string.Join(",", channels)}", cancellationToken);
+        
+        public Task PartAsync(string channel, string message, CancellationToken cancellationToken = default) 
+            => client.SendRawMessageAsync($"PART {channel} :{message}", cancellationToken);
+        
+        public Task PartAsync(IEnumerable<string> channels, string message, CancellationToken cancellationToken = default)
+            => client.SendRawMessageAsync($"PART {string.Join(",", channels)} :{message}", cancellationToken);
     }
 }

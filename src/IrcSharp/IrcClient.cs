@@ -1,4 +1,5 @@
-﻿using System.Collections.Frozen;
+﻿using System.Buffers;
+using System.Collections.Frozen;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -39,6 +40,15 @@ public sealed partial class IrcClient : IAsyncDisposable
     private readonly ILogger<IrcClient> _logger;
     
 #pragma warning disable CA1003
+    /// <summary>
+    /// Triggered when any message is received.
+    /// </summary>
+    /// <remarks>
+    /// This event works independently from other events. When subscribed to, the received message is copied
+    /// to its own buffer and the value for <see cref="_waitForHandlersBeforeNextMessage"/> is ignored.
+    /// </remarks>
+    public event Func<ReadOnlyMemory<byte>, CancellationToken, Task>? OnRawMessageReceived;
+    
     /// <summary>
     /// Triggered when an unknown message is received.
     /// </summary>
@@ -221,6 +231,22 @@ public sealed partial class IrcClient : IAsyncDisposable
         
         await foreach (var message in _messageReader.ReadMessagesAsync(_maximumMessageSize, cancellationToken).ConfigureAwait(false))
         {
+            if (OnRawMessageReceived != null)
+            {
+                var messageSpan = message.AsSpan();
+                var buffer = ArrayPool<byte>.Shared.Rent(messageSpan.Length);
+                messageSpan.CopyTo(buffer);
+
+                var anyMessageHandlerTask = OnRawMessageReceived(buffer.AsMemory(0, messageSpan.Length), cancellationToken)
+                    .ConfigureAwait(false);
+                
+                _ = Task.Run(async () =>
+                {
+                    await anyMessageHandlerTask;
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }, cancellationToken);
+            }
+            
             var key = new CommandKey(message.GetCommand());
             if (!_commandHandlers.TryGetValue(key, out var handler))
             {
