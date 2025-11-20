@@ -132,11 +132,11 @@ public sealed partial class IrcClient : IAsyncDisposable
 
         if (!string.IsNullOrWhiteSpace(_password))
         {
-            await SendRawMessageAsync($"PASS {_password}", _cancellationTokenSource.Token).ConfigureAwait(false);   
+            await this.PassAsync(_password, _cancellationTokenSource.Token).ConfigureAwait(false);
         }
 
-        await SendRawMessageAsync($"NICK {_username}").ConfigureAwait(false);
-        await SendRawMessageAsync($"USER {_identd ?? _username} 0 * :{_realname ?? Consts.DefaultRealname}").ConfigureAwait(false);
+        await this.NickAsync(_username, _cancellationTokenSource.Token).ConfigureAwait(false);
+        await this.UserAsync(_identd ?? _username, _realname ?? Consts.DefaultRealname, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
 
     // make an actual implem
@@ -251,6 +251,6 @@ public sealed partial class IrcClient : IAsyncDisposable
     
     private Task PongAsync(PingEventArgs args, CancellationToken cancellationToken)
     {
-        return SendRawMessageAsync($"PONG :{args.TrailingValue}", cancellationToken);
+        return this.PongAsync(args.TrailingValue, cancellationToken);
     }
 }
