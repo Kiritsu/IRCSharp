@@ -40,7 +40,8 @@ public class EventArgsGenerator : IIncrementalGenerator
                             continue;
                         }
 
-                        if (attributeData.ConstructorArguments is [_, { Values.Length: 0 } _, ..])
+                        if (attributeData.ConstructorArguments.Length >= 2 &&
+                            attributeData.ConstructorArguments[1].Values.Length == 0)
                         {
                             attributes.Add(AttributeData.Create(eventName, null));
                             continue;
@@ -54,7 +55,7 @@ public class EventArgsGenerator : IIncrementalGenerator
                             .Where(x => !string.IsNullOrWhiteSpace(x))
                             .ToArray();
                         
-                        attributes.Add(AttributeData.Create(eventName, parameters!));
+                        attributes.Add(AttributeData.Create(eventName, parameters));
                     }
 
                     return attributes;
@@ -139,7 +140,7 @@ public class EventArgsGenerator : IIncrementalGenerator
                     var (parameterType, parameterName) = @event.Parameters[index];
                     
                     var lowerFirstChar = char.ToLowerInvariant(parameterName[0]);
-                    var restPropertyName = parameterName[1..];
+                    var restPropertyName = parameterName.Substring(1);
                     var camelCasePropertyName = $"{lowerFirstChar}{restPropertyName}";
                     
                     builder.Append($"        {parameterType} {camelCasePropertyName}");
@@ -154,7 +155,7 @@ public class EventArgsGenerator : IIncrementalGenerator
                     var (_, parameterName) = @event.Parameters[index];
                     
                     var lowerFirstChar = char.ToLowerInvariant(parameterName[0]);
-                    var restPropertyName = parameterName[1..];
+                    var restPropertyName = parameterName.Substring(1);
                     var camelCasePropertyName = $"{lowerFirstChar}{restPropertyName}";
 
                     builder.Append($"            {parameterName} = {camelCasePropertyName}");
@@ -180,8 +181,14 @@ public class EventArgsGenerator : IIncrementalGenerator
     }
 }
 
-internal sealed class AttributeData(string eventName, (string Type, string ParameterName)[]? parameters)
+internal sealed class AttributeData
 {
+    public AttributeData(string eventName, (string Type, string ParameterName)[]? parameters)
+    {
+        EventName = eventName;
+        Parameters = parameters;
+    }
+
     public static AttributeData Create(string eventName, string[]? parameterNames)
     {
         return new AttributeData(eventName, parameterNames?.Select(x =>
@@ -191,7 +198,7 @@ internal sealed class AttributeData(string eventName, (string Type, string Param
         }).ToArray());
     }
 
-    public string EventName { get; } = eventName;
+    public string EventName { get; }
     
-    public (string Type, string ParameterName)[]? Parameters { get; } = parameters;
+    public (string Type, string ParameterName)[]? Parameters { get; }
 }
