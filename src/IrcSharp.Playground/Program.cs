@@ -19,7 +19,9 @@ host.Services.AddSingleton<IrcClient>(x => new IrcClient(
         UseSslWithNoValidation = false,
         Username = "testuser19567",
         IgnoreUnknownMessages = false,
-        WaitForHandlersBeforeNextMessage = false
+        WaitForHandlersBeforeNextMessage = false,
+        ParseServerCapabilities = true,
+        IncludeHighLevelMessage = true
     })));
 
 host.Services.AddHostedService<IrcService>();

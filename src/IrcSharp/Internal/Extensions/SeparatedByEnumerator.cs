@@ -1,15 +1,16 @@
 ﻿namespace IrcSharp.Internal.Extensions;
 
 #pragma warning disable CA1815
-public struct ParameterEnumerator
+public struct SeparatedByEnumerator
 #pragma warning restore CA1815
 {
+    private readonly char _separator;
     private readonly ReadOnlyMemory<byte> _params;
     private int _position;
 
-    internal ParameterEnumerator(byte[] @params)
+    internal SeparatedByEnumerator(byte[] @params, char separator)
     {
-        // forces copy of the span to ensure data integrity
+        _separator = separator;
         _params = @params.AsMemory();
         _position = 0;
 
@@ -21,8 +22,8 @@ public struct ParameterEnumerator
     // todo: add tests
     public bool MoveNext()
     {
-        // handles skipping leading spaces: "        param1  param2 param3   param4   "
-        while (_position < _params.Length && _params.Span[_position] == (byte)' ')
+        // handles skipping leading separators (exemple here is with spaces): "        param1  param2 param3   param4   "
+        while (_position < _params.Length && _params.Span[_position] == (byte)_separator)
         {
             _position++;
         }
@@ -33,7 +34,7 @@ public struct ParameterEnumerator
             return false;
         }
 
-        // finds next space that determines end of current parameter
+        // finds next separator position that determines end of current parameter
         int start = _position;
         while (_position < _params.Length && _params.Span[_position] != (byte)' ')
         {
@@ -44,5 +45,5 @@ public struct ParameterEnumerator
         return true;
     }
     
-    public ParameterEnumerator GetEnumerator() => this;
+    public SeparatedByEnumerator GetEnumerator() => this;
 }

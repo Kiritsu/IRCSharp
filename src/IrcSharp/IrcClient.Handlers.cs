@@ -1,5 +1,4 @@
-﻿using System.Text;
-using IrcSharp.Events;
+﻿using IrcSharp.Events;
 using IrcSharp.Internal;
 using IrcSharp.Internal.Extensions;
 using EventArgs = IrcSharp.Events.EventArgs;
@@ -10,12 +9,16 @@ public sealed partial class IrcClient
 {
     private Task HandleUnknownMessageAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
-        return InvokeHandlerAsync(OnUnknownMessage, UnknownMessageEventArgs.Create(message.ToString()), cancellationToken);
+        return InvokeHandlerAsync(OnUnknownMessage, UnknownMessageEventArgs.Create(
+            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
+            message.ToString()), cancellationToken);
     }
     
     private Task HandlePingAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
-        return InvokeHandlerAsync(OnPing, PingEventArgs.Create(message.GetPingToken()), cancellationToken);
+        return InvokeHandlerAsync(OnPing, PingEventArgs.Create(
+            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
+            message.GetPingToken()), cancellationToken);
     }
     
     private Task HandleRplWelcomeAsync(RawIrcMessage message, CancellationToken cancellationToken)
@@ -35,7 +38,9 @@ public sealed partial class IrcClient
             capabilities.Add(param1, param2);
         }
         
-        return InvokeHandlerAsync(OnRplISupportReceived, ServerCapabilityEventArgs.Create(capabilities), cancellationToken);
+        return InvokeHandlerAsync(OnRplISupportReceived, ServerCapabilityEventArgs.Create(
+            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
+            capabilities), cancellationToken);
     }
     
     private Task InvokeHandlerAsync<TEventArgs>(

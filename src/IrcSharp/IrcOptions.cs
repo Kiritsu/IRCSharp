@@ -70,4 +70,9 @@ public class IrcOptions
     /// Gets or sets whether to parse the server capabilities.
     /// </summary>
     public bool ParseServerCapabilities { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to include the high level <see cref="IrcMessage"/> in the events"/>.
+    /// </summary>
+    public bool IncludeHighLevelMessage { get; set; }
 }

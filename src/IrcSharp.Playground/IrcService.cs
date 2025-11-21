@@ -16,6 +16,14 @@ public class IrcService(IrcClient client, ILogger<IrcService> logger) : Backgrou
             logger.LogInformation("Received: {Message}", Encoding.UTF8.GetString(messageBytes.Span));
             return Task.CompletedTask;
         };
+
+        client.OnRplISupportReceived += (args, _) =>
+        {
+            logger.LogInformation("Server capabilities: {Capabilities} - Prefix: {Prefix}",
+                string.Join(", ", args.Capabilities), args.Origin?.Prefix);
+
+            return Task.CompletedTask;
+        };
         
         await client.ConnectAsync();
     }

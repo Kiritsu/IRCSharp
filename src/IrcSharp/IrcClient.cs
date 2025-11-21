@@ -36,12 +36,13 @@ public sealed partial class IrcClient : IAsyncDisposable
     private readonly string? _identd;
 
     private readonly bool _parseServerCapabilities;
+    private readonly bool _includeHighLevelMessage;
     
     private delegate Task HandlerDelegate(RawIrcMessage context, CancellationToken cancellationToken);
     private readonly FrozenDictionary<CommandKey, HandlerDelegate> _commandHandlers;
-    
+
     private readonly ILogger<IrcClient> _logger;
-    
+
 #pragma warning disable CA1003
     /// <summary>
     /// Triggered when any message is received.
@@ -107,6 +108,7 @@ public sealed partial class IrcClient : IAsyncDisposable
         _maximumMessageSize = options.Value.MaximumMessageSize;
 
         _parseServerCapabilities = options.Value.ParseServerCapabilities;
+        _includeHighLevelMessage = options.Value.IncludeHighLevelMessage;
         
         _commandHandlers = new Dictionary<CommandKey, HandlerDelegate>
         {
