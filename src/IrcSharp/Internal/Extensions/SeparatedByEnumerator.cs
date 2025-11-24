@@ -36,7 +36,7 @@ public struct SeparatedByEnumerator
 
         // finds next separator position that determines end of current parameter
         int start = _position;
-        while (_position < _params.Length && _params.Span[_position] != (byte)' ')
+        while (_position < _params.Length && _params.Span[_position] != (byte)_separator)
         {
             _position++;
         }
