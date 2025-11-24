@@ -11,7 +11,7 @@ public static class MemoryParsingExtensions
             var position = 0;
             if (@this.Span[0] == '-')
             {
-                return (Encoding.UTF8.GetString(@this.Span), null);
+                return (Encoding.UTF8.GetString(@this.Span[1..]), null);
             }
             
             while (position < @this.Length && @this.Span[position] != (byte)'=')
@@ -19,7 +19,7 @@ public static class MemoryParsingExtensions
                 position++;
             }
 
-            if (position == @this.Length - 1)
+            if (position == @this.Length)
             {
                 // no equal sign found, value-less parameter
                 return (Encoding.UTF8.GetString(@this.Span), null);

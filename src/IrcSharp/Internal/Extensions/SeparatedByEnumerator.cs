@@ -19,7 +19,6 @@ public struct SeparatedByEnumerator
 
     public ReadOnlyMemory<byte> Current { get; private set; }
 
-    // todo: add tests
     public bool MoveNext()
     {
         // handles skipping leading separators (exemple here is with spaces): "        param1  param2 param3   param4   "
