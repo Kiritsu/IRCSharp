@@ -7,7 +7,7 @@ namespace IrcSharp.Internal.IO;
 internal interface IIrcMessageReader
 {
     IAsyncEnumerable<RawIrcMessage> ReadMessagesAsync(
-        int maximumMessageSize = Consts.StandardMaximumMessageSize,
+        int maximumMessageSize = IrcSharpConsts.StandardMaximumReceiveMessageSize,
         CancellationToken cancellationToken = default);
 }
 
@@ -17,7 +17,7 @@ internal sealed class IrcMessageReader(Stream stream) : IAsyncDisposable, IIrcMe
     private int _readerActive;
 
     public async IAsyncEnumerable<RawIrcMessage> ReadMessagesAsync(
-        int maximumMessageSize = Consts.StandardMaximumMessageSize,
+        int maximumMessageSize = IrcSharpConsts.StandardMaximumReceiveMessageSize,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (Interlocked.CompareExchange(ref _readerActive, 1, 0) != 0)
@@ -40,7 +40,7 @@ internal sealed class IrcMessageReader(Stream stream) : IAsyncDisposable, IIrcMe
                 if (buffer.Length > maximumMessageSize)
                 {
                     var testReader = new SequenceReader<byte>(buffer);
-                    if (!testReader.TryReadTo(out ReadOnlySequence<byte> _, Consts.Crlf))
+                    if (!testReader.TryReadTo(out ReadOnlySequence<byte> _, IrcSharpConsts.Crlf))
                     {
                         throw new InvalidOperationException(
                             $"Received {buffer.Length} bytes without finding message delimiter (max: {maximumMessageSize})");
@@ -50,7 +50,7 @@ internal sealed class IrcMessageReader(Stream stream) : IAsyncDisposable, IIrcMe
                 while (true)
                 {
                     var sequenceReader = new SequenceReader<byte>(buffer);
-                    if (!sequenceReader.TryReadTo(out ReadOnlySequence<byte> localLine, Consts.Crlf))
+                    if (!sequenceReader.TryReadTo(out ReadOnlySequence<byte> localLine, IrcSharpConsts.Crlf))
                     {
                         break;
                     }

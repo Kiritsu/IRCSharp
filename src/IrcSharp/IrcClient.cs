@@ -24,7 +24,8 @@ public sealed partial class IrcClient : IAsyncDisposable
     
     private readonly bool _waitForHandlersBeforeNextMessage;
     private readonly bool _ignoreUnknownMessages;
-    private readonly int _maximumMessageSize;
+    private readonly int _maximumSendMessageSize;
+    private readonly int _maximumReceiveMessageSize;
 
     private readonly string _host;
     private readonly int _port;
@@ -105,7 +106,8 @@ public sealed partial class IrcClient : IAsyncDisposable
         
         _waitForHandlersBeforeNextMessage = options.Value.WaitForHandlersBeforeNextMessage;
         _ignoreUnknownMessages = options.Value.IgnoreUnknownMessages;
-        _maximumMessageSize = options.Value.MaximumMessageSize;
+        _maximumSendMessageSize = options.Value.MaximumSendMessageSize;
+        _maximumReceiveMessageSize = options.Value.MaximumReceiveMessageSize;
 
         _parseServerCapabilities = options.Value.ParseServerCapabilities;
         _includeHighLevelMessage = options.Value.IncludeHighLevelMessage;
@@ -164,10 +166,10 @@ public sealed partial class IrcClient : IAsyncDisposable
         }
 
         await this.NickAsync(_username, _cancellationTokenSource.Token).ConfigureAwait(false);
-        await this.UserAsync(_identd ?? _username, _realname ?? Consts.DefaultRealname, _cancellationTokenSource.Token).ConfigureAwait(false);
+        await this.UserAsync(_identd ?? _username, _realname ?? IrcSharpConsts.DefaultRealname, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
 
-    // make an actual implem
+    // todo: make an actual implem
     private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         if (_useSslWithNoValidation)
@@ -191,7 +193,7 @@ public sealed partial class IrcClient : IAsyncDisposable
             throw new InvalidOperationException("The client is not connected or ready.");
         }
         
-        await _messageWriter.WriteAsync(message, _maximumMessageSize, cancellationToken).ConfigureAwait(false);
+        await _messageWriter.WriteAsync(message, _maximumSendMessageSize, cancellationToken).ConfigureAwait(false);
     }
     
     public async Task SendRawMessageAsync(ReadOnlyMemory<char> message, CancellationToken cancellationToken = default)
@@ -201,7 +203,7 @@ public sealed partial class IrcClient : IAsyncDisposable
             throw new InvalidOperationException("The client is not connected or ready.");
         }
         
-        await _messageWriter.WriteAsync(message, _maximumMessageSize, cancellationToken).ConfigureAwait(false);
+        await _messageWriter.WriteAsync(message, _maximumSendMessageSize, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DisconnectAsync()
@@ -247,7 +249,7 @@ public sealed partial class IrcClient : IAsyncDisposable
             throw new InvalidOperationException("The client is not connected or ready");
         }
         
-        await foreach (var message in _messageReader.ReadMessagesAsync(_maximumMessageSize, cancellationToken).ConfigureAwait(false))
+        await foreach (var message in _messageReader.ReadMessagesAsync(_maximumReceiveMessageSize, cancellationToken).ConfigureAwait(false))
         {
             if (OnRawMessageReceived != null)
             {

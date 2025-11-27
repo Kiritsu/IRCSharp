@@ -13,4 +13,6 @@ public sealed class IrcMessage
     public ImmutableArray<string> Parameters { get; init; } = [];
 
     public string? Trailing { get; init; }
+    
+    internal IrcMessage() {}
 }

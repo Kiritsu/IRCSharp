@@ -7,7 +7,7 @@ internal interface IIrcMessageWriter
 {
     Task WriteAsync(
         ReadOnlyMemory<char> message, 
-        int maximumMessageSize = Consts.StandardMaximumMessageSize, 
+        int maximumMessageSize = IrcSharpConsts.StandardMaximumSendMessageSize, 
         CancellationToken cancellationToken = default);
 }
 
@@ -17,7 +17,7 @@ internal sealed class IrcMessageWriter(Stream stream) : IDisposable, IIrcMessage
     
     public async Task WriteAsync(
         ReadOnlyMemory<char> message, 
-        int maximumMessageSize = Consts.StandardMaximumMessageSize, 
+        int maximumMessageSize = IrcSharpConsts.StandardMaximumSendMessageSize, 
         CancellationToken cancellationToken = default)
     {
         await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -36,8 +36,8 @@ internal sealed class IrcMessageWriter(Stream stream) : IDisposable, IIrcMessage
             {
                 int bytesWritten = Encoding.UTF8.GetBytes(message.Span, buffer.AsSpan());
                 
-                buffer[bytesWritten] = Consts.Crlf[0];
-                buffer[bytesWritten + 1] = Consts.Crlf[1];
+                buffer[bytesWritten] = IrcSharpConsts.Crlf[0];
+                buffer[bytesWritten + 1] = IrcSharpConsts.Crlf[1];
                 
                 await stream.WriteAsync(buffer.AsMemory(0, bytesWritten + 2), cancellationToken).ConfigureAwait(false);
             }
@@ -54,7 +54,7 @@ internal sealed class IrcMessageWriter(Stream stream) : IDisposable, IIrcMessage
     
     public Task WriteAsync(
         string message, 
-        int maximumMessageSize = Consts.StandardMaximumMessageSize, 
+        int maximumMessageSize = IrcSharpConsts.StandardMaximumSendMessageSize, 
         CancellationToken cancellationToken = default)
     {
         return WriteAsync(message.AsMemory(), maximumMessageSize, cancellationToken);

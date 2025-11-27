@@ -59,12 +59,20 @@ public class IrcOptions
     public bool IgnoreUnknownMessages { get; set; }
     
     /// <summary>
-    /// Gets or sets the maximum message size.
+    /// Gets or sets the maximum send message size.
     /// </summary>
     /// <remarks>
-    /// The default value is <see cref="Consts.StandardMaximumMessageSize"/>. It can be overriden if the remote IRC server support longer messages.
+    /// The default value is <see cref="IrcSharpConsts.StandardMaximumSendMessageSize"/>. It can be overriden if the remote IRC server support longer messages.
     /// </remarks>
-    public int MaximumMessageSize { get; set; } = Consts.StandardMaximumMessageSize;
+    public int MaximumSendMessageSize { get; set; } = IrcSharpConsts.StandardMaximumSendMessageSize;
+    
+    /// <summary>
+    /// Gets or sets the maximum receive message size.
+    /// </summary>
+    /// <remarks>
+    /// The default value is <see cref="IrcSharpConsts.StandardMaximumReceiveMessageSize"/>. It can be overriden if the remote IRC server support longer messages.
+    /// </remarks>
+    public int MaximumReceiveMessageSize { get; set; } = IrcSharpConsts.StandardMaximumReceiveMessageSize;
 
     /// <summary>
     /// Gets or sets whether to parse the server capabilities.
