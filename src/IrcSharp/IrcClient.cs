@@ -73,12 +73,12 @@ public sealed partial class IrcClient : IAsyncDisposable
     /// <summary>
     /// Triggered when a RPL_WELCOME (001) message is received.
     /// </summary>
-    public event Func<EmptyEventArgs, CancellationToken, Task>? OnReady;
+    public event Func<RplWelcomeEventArgs, CancellationToken, Task>? OnWelcome;
     
     /// <summary>
     /// Triggered when a RPL_ISUPPORT (005) message is received.
     /// </summary>
-    public event Func<ServerCapabilityEventArgs, CancellationToken, Task>? OnRplISupportReceived;
+    public event Func<RplIsupportEventArgs, CancellationToken, Task>? OnRplISupportReceived;
 #pragma warning restore CA1003
 
     /// <summary>
@@ -321,7 +321,7 @@ public sealed partial class IrcClient : IAsyncDisposable
         return this.PongAsync(args.TrailingValue, cancellationToken);
     }
     
-    private Task OnOnRplISupportReceived(ServerCapabilityEventArgs args, CancellationToken cancellationToken)
+    private Task OnOnRplISupportReceived(RplIsupportEventArgs args, CancellationToken cancellationToken)
     {
         Capabilities ??= new IrcServerCapabilities();
         Capabilities.Append(args.Capabilities);

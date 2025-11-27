@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Text;
+using IrcSharp.Internal.Extensions;
 using Microsoft.Extensions.ObjectPool;
 
 namespace IrcSharp.Internal;
@@ -318,7 +319,7 @@ internal sealed class RawIrcMessage : IResettable
 
     public override string ToString()
     {
-        return Encoding.UTF8.GetString(AsSpan());
+        return AsSpan().AsUtf8String();
     }
 
     public bool TryReset()

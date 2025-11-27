@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using IrcSharp.Internal.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -8,12 +9,12 @@ public class IrcService(IrcClient client, ILogger<IrcService> logger) : Backgrou
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        client.OnReady += (_, token) 
+        client.OnWelcome += (_, token) 
             => client.SendRawMessageAsync("JOIN :#testallan", token);
 
         client.OnRawMessageReceived += (messageBytes, _) =>
         {
-            logger.LogInformation("Received: {Message}", Encoding.UTF8.GetString(messageBytes.Span));
+            logger.LogInformation("Received: {Message}", messageBytes.Span.AsUtf8String());
             return Task.CompletedTask;
         };
 

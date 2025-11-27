@@ -24,7 +24,9 @@ public sealed partial class IrcClient
     private Task HandleRplWelcomeAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
         IsConnected = true;
-        return InvokeHandlerAsync(OnReady, EmptyEventArgs.Instance, cancellationToken);
+        return InvokeHandlerAsync(OnWelcome, RplWelcomeEventArgs.Create(
+            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
+            message.GetTrailing().AsUtf8String()), cancellationToken);
     }
     
     private Task HandleRplISupportAsync(RawIrcMessage message, CancellationToken cancellationToken)
@@ -38,7 +40,7 @@ public sealed partial class IrcClient
             capabilities.Add(param1, param2);
         }
         
-        return InvokeHandlerAsync(OnRplISupportReceived, ServerCapabilityEventArgs.Create(
+        return InvokeHandlerAsync(OnRplISupportReceived, RplIsupportEventArgs.Create(
             _includeHighLevelMessage ? message.ToIrcMessage() : null, 
             capabilities), cancellationToken);
     }

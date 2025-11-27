@@ -7,24 +7,19 @@ internal static class IrcMessageExtensions
 {
     extension(RawIrcMessage @this)
     {
-        public bool IsPing()
-        {
-            return @this.GetCommand().SequenceEqual("PING"u8);
-        }
-
         public string GetPingToken()
         {
             // Handles PING :trailing & PING params
             var trailing = @this.GetTrailing();
             if (trailing.Length > 0)
             {
-                return Encoding.UTF8.GetString(trailing[1..]);
+                return trailing[1..].AsUtf8String();
             }
         
             var parameters = @this.GetParams();
             if (parameters.Length > 0)
             {
-                return Encoding.UTF8.GetString(parameters);
+                return parameters.AsUtf8String();
             }
         
             return string.Empty;
@@ -45,16 +40,16 @@ internal static class IrcMessageExtensions
                 var enumerator = new SeparatedByEnumerator(tagsRaw.ToArray(), ';');
                 foreach (var tag in enumerator)
                 {
-                    builder.Add(Encoding.UTF8.GetString(tag.Span));
+                    builder.Add(tag.Span.AsUtf8String());
                 }
 
                 tags = builder.MoveToImmutable();
             }
 
             var prefixRaw = @this.GetPrefix();
-            var prefix = prefixRaw.IsEmpty ? null : Encoding.UTF8.GetString(prefixRaw);
+            var prefix = prefixRaw.IsEmpty ? null : prefixRaw.AsUtf8String();
             
-            var command = Encoding.UTF8.GetString(@this.GetCommand());
+            var command = @this.GetCommand().AsUtf8String();
             
             var parametersRaw = @this.GetParams();
             var parameters = ImmutableArray<string>.Empty;
@@ -64,14 +59,14 @@ internal static class IrcMessageExtensions
                 var enumerator = new SeparatedByEnumerator(parametersRaw.ToArray(), ' ');
                 foreach (var tag in enumerator)
                 {
-                    builder.Add(Encoding.UTF8.GetString(tag.Span));
+                    builder.Add(tag.Span.AsUtf8String());
                 }
 
                 parameters = builder.MoveToImmutable();
             }
             
             var trailingRaw = @this.GetTrailing();
-            var trailing = trailingRaw.IsEmpty ? null : Encoding.UTF8.GetString(trailingRaw);
+            var trailing = trailingRaw.IsEmpty ? null : trailingRaw.AsUtf8String();
 
             return new IrcMessage
             {
