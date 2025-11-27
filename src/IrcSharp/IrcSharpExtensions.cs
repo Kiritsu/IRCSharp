@@ -4,6 +4,12 @@ public static class IrcSharpExtensions
 {
     extension(IrcClient client)
     {
+        public Task CapLsAsync(string version, CancellationToken cancellationToken = default)
+            => client.SendRawMessageAsync($"CAP LS {version}", cancellationToken);
+        
+        public Task CapReqAsync(string capability, CancellationToken cancellationToken = default)
+            => client.SendRawMessageAsync($"CAP REQ :{capability}", cancellationToken);
+        
         public Task NickAsync(string nick, CancellationToken cancellationToken = default) 
             => client.SendRawMessageAsync($"NICK {nick}", cancellationToken);
         

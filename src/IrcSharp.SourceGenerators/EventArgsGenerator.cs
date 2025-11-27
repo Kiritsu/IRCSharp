@@ -80,13 +80,11 @@ public class EventArgsGenerator : IIncrementalGenerator
          *   private {Name}EventArgs() {}
          * 
          *   ## ELSE ##
-         *   public required IrcMessage? Origin { get; init; }
          *   ### LOOP ### -> {ParamterType} ; {ParameterName} on {Parameters}
          *   public required {ParameterType} {ParameterName} {{ get; init; }}
          *   ### ENDLOOP ###
          *
          *   public static {Name}EventArgs Create(
-         *     IrcMessage? origin,
          *   ### LOOP (not last element) ### -> {ParameterType} {ParameterName}
          *     {ParameterType} {ParameterName:camelCaseFormat},
          *   ### ENDLOOP ###
@@ -94,7 +92,6 @@ public class EventArgsGenerator : IIncrementalGenerator
          *   {
          *     return new {Name}EventArgs
          *     {
-         *       Origin = origin,
          *       ### LOOP (not last element) ### -> {ParameterType} {ParameterName}
          *       {ParameterName} = {ParameterName:camelCaseFormat},
          *       ### ENDLOOP ###
@@ -129,8 +126,6 @@ public class EventArgsGenerator : IIncrementalGenerator
             else
             {
                 // generate the properties
-                builder.AppendLine($"    public required IrcMessage? Origin {{ get; init; }}");
-                
                 foreach (var (parameterType, parameterName) in @event.Parameters)
                 {
                     builder.AppendLine($"    public required {parameterType} {parameterName} {{ get; init; }}");
@@ -140,7 +135,6 @@ public class EventArgsGenerator : IIncrementalGenerator
                 
                 // generate the factory method
                 builder.AppendLine($"    public static {@event.EventName}EventArgs Create(");
-                builder.AppendLine("        IrcMessage? origin,");
                 for (var index = 0; index < @event.Parameters.Length; index++)
                 {
                     var (parameterType, parameterName) = @event.Parameters[index];
@@ -156,7 +150,6 @@ public class EventArgsGenerator : IIncrementalGenerator
                 builder.AppendLine("    {");
                 builder.AppendLine($"        return new {@event.EventName}EventArgs");
                 builder.AppendLine("        {");
-                builder.AppendLine("            Origin = origin,");
                 
                 for (var index = 0; index < @event.Parameters.Length; index++)
                 {

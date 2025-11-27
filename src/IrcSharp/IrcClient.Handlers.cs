@@ -10,29 +10,31 @@ public sealed partial class IrcClient
     private Task HandleUnknownMessageAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
         return InvokeHandlerAsync(OnUnknownMessage, UnknownMessageEventArgs.Create(
-            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
-            message.ToString()), cancellationToken);
+            message.ToIrcMessage(), message.ToString()), cancellationToken);
     }
     
-    private Task HandlePingAsync(RawIrcMessage message, CancellationToken cancellationToken)
+    private async Task HandlePingAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
-        return InvokeHandlerAsync(OnPing, PingEventArgs.Create(
-            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
-            message.GetPingToken()), cancellationToken);
+        var pingToken = message.GetPingToken();
+        await this.PongAsync(pingToken, cancellationToken).ConfigureAwait(false);
+        
+        await InvokeHandlerAsync(OnPing, PingEventArgs.Create(
+            message.ToIrcMessage(), pingToken), 
+            cancellationToken).ConfigureAwait(false);
     }
     
     private Task HandleRplWelcomeAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
         IsConnected = true;
-        return InvokeHandlerAsync(OnWelcome, RplWelcomeEventArgs.Create(
-            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
-            message.GetTrailing().AsUtf8String()), cancellationToken);
+        
+        return InvokeHandlerAsync(OnWelcome, GenericEventArgs.Create(
+            message.ToIrcMessage()), cancellationToken);
     }
     
     private Task HandleRplISupportAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
         IsConnected = true;
-
+        
         var capabilities = new Dictionary<string, string?>();
         foreach (var rawCapability in message.EnumerateParameters())
         {
@@ -40,9 +42,43 @@ public sealed partial class IrcClient
             capabilities.Add(param1, param2);
         }
         
+        if (_parseServerCapabilities)
+        {
+            Capabilities ??= new IrcServerCapabilities();
+            Capabilities.Append(capabilities);
+        }
+        
         return InvokeHandlerAsync(OnRplISupportReceived, RplIsupportEventArgs.Create(
-            _includeHighLevelMessage ? message.ToIrcMessage() : null, 
-            capabilities), cancellationToken);
+            message.ToIrcMessage(), capabilities), cancellationToken);
+    }
+    
+    private async Task HandleCapAsync(RawIrcMessage message, CancellationToken cancellationToken)
+    {
+        if (message.GetCommand().SequenceEqual("LS"u8))
+        {
+            var serverCapabilities = new List<string>();
+
+            var trailingSpaceEnumerator = new SeparatedByEnumerator(message.GetTrailing().ToArray(), ' ');
+            foreach (var capability in trailingSpaceEnumerator)
+            {
+                var capabilityStr = capability.AsUtf8String();
+                serverCapabilities.Add(capabilityStr);
+            }
+            
+            if (_capabilityNegotiationVersion != null && _allowedCapabilities != null)
+            {
+                foreach (var capability in serverCapabilities)
+                {
+                    if (_allowedCapabilities.Contains(capability))
+                    {
+                        await SendRawMessageAsync($"CAP REQ :{capability}", cancellationToken).ConfigureAwait(false);
+                    }
+                }
+            }
+        }
+        
+        await InvokeHandlerAsync(OnCapReceived, GenericEventArgs.Create(message.ToIrcMessage()), 
+            cancellationToken).ConfigureAwait(false);
     }
     
     private Task InvokeHandlerAsync<TEventArgs>(

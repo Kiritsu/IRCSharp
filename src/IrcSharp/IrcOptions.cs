@@ -80,7 +80,12 @@ public class IrcOptions
     public bool ParseServerCapabilities { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to include the high level <see cref="IrcMessage"/> in the events"/>.
+    /// Gets or sets the capability negotiation version. Default is "302". When null, the client will not send any capability negotiation message. (CAP LS XXX)
     /// </summary>
-    public bool IncludeHighLevelMessage { get; set; }
+    public string? CapabilityNegotiationVersion { get; set; } = "302";
+
+    /// <summary>
+    /// Gets or sets the list of capabilities that the client will request. When null, the client will not request any capabilities. When empty, the client will request all capabilities.
+    /// </summary>
+    public IEnumerable<string>? AllowedCapabilities { get; set; } = ArraySegment<string>.Empty;
 }

@@ -37,7 +37,9 @@ public sealed partial class IrcClient : IAsyncDisposable
     private readonly string? _identd;
 
     private readonly bool _parseServerCapabilities;
-    private readonly bool _includeHighLevelMessage;
+    
+    private readonly string? _capabilityNegotiationVersion;
+    private readonly HashSet<string>? _allowedCapabilities;
     
     private delegate Task HandlerDelegate(RawIrcMessage context, CancellationToken cancellationToken);
     private readonly FrozenDictionary<CommandKey, HandlerDelegate> _commandHandlers;
@@ -73,12 +75,17 @@ public sealed partial class IrcClient : IAsyncDisposable
     /// <summary>
     /// Triggered when a RPL_WELCOME (001) message is received.
     /// </summary>
-    public event Func<RplWelcomeEventArgs, CancellationToken, Task>? OnWelcome;
+    public event Func<GenericEventArgs, CancellationToken, Task>? OnWelcome;
     
     /// <summary>
     /// Triggered when a RPL_ISUPPORT (005) message is received.
     /// </summary>
     public event Func<RplIsupportEventArgs, CancellationToken, Task>? OnRplISupportReceived;
+    
+    /// <summary>
+    /// Triggered when a CAP command is received.
+    /// </summary>
+    public event Func<GenericEventArgs, CancellationToken, Task>? OnCapReceived;
 #pragma warning restore CA1003
 
     /// <summary>
@@ -110,13 +117,16 @@ public sealed partial class IrcClient : IAsyncDisposable
         _maximumReceiveMessageSize = options.Value.MaximumReceiveMessageSize;
 
         _parseServerCapabilities = options.Value.ParseServerCapabilities;
-        _includeHighLevelMessage = options.Value.IncludeHighLevelMessage;
+        
+        _capabilityNegotiationVersion = options.Value.CapabilityNegotiationVersion;
+        _allowedCapabilities = options.Value.AllowedCapabilities?.ToHashSet(StringComparer.OrdinalIgnoreCase);
         
         _commandHandlers = new Dictionary<CommandKey, HandlerDelegate>
         {
             [CommandKey.FromString("PING")] = HandlePingAsync,
             [CommandKey.FromString("001")] = HandleRplWelcomeAsync,
-            [CommandKey.FromString("005")] = HandleRplISupportAsync
+            [CommandKey.FromString("005")] = HandleRplISupportAsync,
+            [CommandKey.FromString("CAP")] = HandleCapAsync,
         }.ToFrozenDictionary();
     }
 
@@ -128,7 +138,6 @@ public sealed partial class IrcClient : IAsyncDisposable
         }
      
         await ResetAsync().ConfigureAwait(false);
-        SubscribeInternalHandlers();
         
         _cancellationTokenSource = new CancellationTokenSource();
         _tcpClient = new TcpClient();
@@ -159,12 +168,17 @@ public sealed partial class IrcClient : IAsyncDisposable
         _messageWriter = new IrcMessageWriter(stream);
         
         _ = Task.Run(() => ReceiveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+        
+        if (_capabilityNegotiationVersion != null)
+        {
+            await this.CapLsAsync(_capabilityNegotiationVersion).ConfigureAwait(false);
+        }
 
         if (!string.IsNullOrWhiteSpace(_password))
         {
             await this.PassAsync(_password, _cancellationTokenSource.Token).ConfigureAwait(false);
         }
-
+        
         await this.NickAsync(_username, _cancellationTokenSource.Token).ConfigureAwait(false);
         await this.UserAsync(_identd ?? _username, _realname ?? IrcSharpConsts.DefaultRealname, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
@@ -219,7 +233,6 @@ public sealed partial class IrcClient : IAsyncDisposable
     private async ValueTask ResetAsync()
     {
         IsConnected = false;
-        UnsubscribeInternalHandlers();
         
         if (_sslStream != null)
         {
@@ -294,38 +307,5 @@ public sealed partial class IrcClient : IAsyncDisposable
                 }, cancellationToken);
             }
         }
-    }
-    
-    private void SubscribeInternalHandlers()
-    {
-        OnPing += PongAsync;
-
-        if (_parseServerCapabilities)
-        {
-            OnRplISupportReceived += OnOnRplISupportReceived;
-        }
-    }
-
-    private void UnsubscribeInternalHandlers()
-    {
-        OnPing -= PongAsync;
-        
-        if (_parseServerCapabilities)
-        {
-            OnRplISupportReceived -= OnOnRplISupportReceived;
-        }
-    }
-    
-    private Task PongAsync(PingEventArgs args, CancellationToken cancellationToken)
-    {
-        return this.PongAsync(args.TrailingValue, cancellationToken);
-    }
-    
-    private Task OnOnRplISupportReceived(RplIsupportEventArgs args, CancellationToken cancellationToken)
-    {
-        Capabilities ??= new IrcServerCapabilities();
-        Capabilities.Append(args.Capabilities);
-        
-        return Task.CompletedTask;
     }
 }

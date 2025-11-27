@@ -3,8 +3,8 @@
 namespace IrcSharp.Events;
 
 [IrcSharpEvent("Empty")]
-[IrcSharpEvent("UnknownMessage", "string:Message")]
-[IrcSharpEvent("Ping", "string?:TrailingValue")]
-[IrcSharpEvent("RplWelcome", "string:Message")]
-[IrcSharpEvent("RplIsupport", "IReadOnlyDictionary<string, string?>:Capabilities")]
+[IrcSharpEvent("Generic", "IrcMessage:Origin")]
+[IrcSharpEvent("UnknownMessage", "IrcMessage:Origin", "string:Message")]
+[IrcSharpEvent("Ping", "IrcMessage:Origin", "string?:TrailingValue")]
+[IrcSharpEvent("RplIsupport", "IrcMessage:Origin", "IReadOnlyDictionary<string, string?>:Capabilities")]
 public abstract class EventArgs;

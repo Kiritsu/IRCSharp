@@ -21,7 +21,6 @@ host.Services.AddSingleton<IrcClient>(x => new IrcClient(
         IgnoreUnknownMessages = false,
         WaitForHandlersBeforeNextMessage = false,
         ParseServerCapabilities = true,
-        IncludeHighLevelMessage = true,
         MaximumReceiveMessageSize = IrcSharpConsts.ExtendedMaximumReceiveMessageSize,
         MaximumSendMessageSize = IrcSharpConsts.ExtendedMaximumSendMessageSize
     })));
