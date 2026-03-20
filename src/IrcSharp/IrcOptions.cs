@@ -1,4 +1,6 @@
-﻿namespace IrcSharp;
+﻿using System.Net.Security;
+
+namespace IrcSharp;
 
 /// <summary>
 /// Represents the different options that can be used to configure the IRC client.
@@ -31,7 +33,7 @@ public class IrcOptions
     /// Gets or sets a custom callback to validate the server's SSL certificate.
     /// When set, this callback takes precedence over the default validation logic.
     /// </summary>
-    public System.Net.Security.RemoteCertificateValidationCallback? RemoteCertificateValidationCallback { get; set; }
+    public RemoteCertificateValidationCallback? RemoteCertificateValidationCallback { get; set; }
 
     /// <summary>
     /// Gets or sets the port to connect to.
