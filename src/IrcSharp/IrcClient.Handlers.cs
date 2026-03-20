@@ -73,7 +73,7 @@ public sealed partial class IrcClient
         {
             var serverCapabilities = new List<string>();
 
-            var trailingSpaceEnumerator = new SeparatedByEnumerator(message.GetTrailing().ToArray(), ' ');
+            var trailingSpaceEnumerator = new SeparatedByEnumerator(message.GetTrailing()[1..].ToArray(), ' ');
             foreach (var capability in trailingSpaceEnumerator)
             {
                 var capabilityStr = capability.AsUtf8String();
