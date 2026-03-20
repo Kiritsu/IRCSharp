@@ -21,6 +21,19 @@ public class IrcOptions
     public bool UseSslWithNoValidation { get; set; }
 
     /// <summary>
+    /// Gets or sets the expected SHA-256 thumbprint of the server's SSL certificate.
+    /// When set, the certificate is accepted if its thumbprint matches, regardless of chain errors.
+    /// This is useful for servers using self-signed certificates.
+    /// </summary>
+    public string? ServerCertificateThumbprint { get; set; }
+
+    /// <summary>
+    /// Gets or sets a custom callback to validate the server's SSL certificate.
+    /// When set, this callback takes precedence over the default validation logic.
+    /// </summary>
+    public System.Net.Security.RemoteCertificateValidationCallback? RemoteCertificateValidationCallback { get; set; }
+
+    /// <summary>
     /// Gets or sets the port to connect to.
     /// </summary>
     public required int Port { get; set; }
