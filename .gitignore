@@ -31,4 +31,5 @@ _UpgradeReport_Files/
 
 Thumbs.db
 Desktop.ini
-.DS_StoreBenchmarkDotNet.Artifacts/
+.DS_Store
+BenchmarkDotNet.Artifacts/
