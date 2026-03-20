@@ -13,7 +13,7 @@ internal static class IrcMessageExtensions
             var trailing = @this.GetTrailing();
             if (trailing.Length > 0)
             {
-                return trailing[1..].AsUtf8String();
+                return trailing.AsUtf8String();
             }
         
             var parameters = @this.GetParams();

@@ -80,9 +80,9 @@ internal sealed class RawIrcMessage : IResettable
     
     public ReadOnlySpan<byte> GetTags()
     {
-        return !TryGetTagsRange(out var startIndex, out var sequenceLength) 
-            ? ReadOnlySpan<byte>.Empty 
-            : AsSpan().Slice(startIndex, sequenceLength);
+        return !TryGetTagsRange(out var startIndex, out var sequenceLength)
+            ? ReadOnlySpan<byte>.Empty
+            : AsSpan().Slice(startIndex + 1, sequenceLength - 1); // skip leading '@'
     }
     
     private bool TryGetPrefixRange(out int startIndex, out int sequenceLength)
@@ -137,9 +137,9 @@ internal sealed class RawIrcMessage : IResettable
 
     public ReadOnlySpan<byte> GetPrefix()
     {
-        return !TryGetPrefixRange(out var startIndex, out var sequenceLength) 
-            ? ReadOnlySpan<byte>.Empty 
-            : AsSpan().Slice(startIndex, sequenceLength);
+        return !TryGetPrefixRange(out var startIndex, out var sequenceLength)
+            ? ReadOnlySpan<byte>.Empty
+            : AsSpan().Slice(startIndex + 1, sequenceLength - 1); // skip leading ':'
     }
     
     private bool TryGetCommandRange(out int startIndex, out int sequenceLength)
@@ -312,9 +312,9 @@ internal sealed class RawIrcMessage : IResettable
 
     public ReadOnlySpan<byte> GetTrailing()
     {
-        return !TryGetTrailingRange(out var startIndex, out var sequenceLength) 
-            ? ReadOnlySpan<byte>.Empty 
-            : AsSpan().Slice(startIndex, sequenceLength);
+        return !TryGetTrailingRange(out var startIndex, out var sequenceLength)
+            ? ReadOnlySpan<byte>.Empty
+            : AsSpan().Slice(startIndex + 1, sequenceLength - 1); // skip leading ':'
     }
 
     public override string ToString()
