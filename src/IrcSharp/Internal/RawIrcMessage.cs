@@ -75,9 +75,10 @@ internal sealed class RawIrcMessage : IResettable
             sequenceLength--;
         }
 
+        _tagsRange = (startIndex, sequenceLength);
         return true;
     }
-    
+
     public ReadOnlySpan<byte> GetTags()
     {
         return !TryGetTagsRange(out var startIndex, out var sequenceLength) 
@@ -131,7 +132,8 @@ internal sealed class RawIrcMessage : IResettable
         {
             sequenceLength--;
         }
-    
+
+        _prefixRange = (startIndex, sequenceLength);
         return true;
     }
 
@@ -192,10 +194,11 @@ internal sealed class RawIrcMessage : IResettable
         {
             sequenceLength--;
         }
-    
+
+        _commandRange = (startIndex, sequenceLength);
         return true;
     }
-    
+
     public ReadOnlySpan<byte> GetCommand()
     {
         return !TryGetCommandRange(out var startIndex, out var sequenceLength) 
@@ -253,10 +256,11 @@ internal sealed class RawIrcMessage : IResettable
         {
             sequenceLength--;
         }
-    
+
+        _paramsRange = (startIndex, sequenceLength);
         return true;
     }
-    
+
     public ReadOnlySpan<byte> GetParams()
     {
         return !TryGetParamsRange(out var startIndex, out var sequenceLength) 
@@ -307,6 +311,7 @@ internal sealed class RawIrcMessage : IResettable
         }
 
         sequenceLength = span.Length;
+        _trailingRange = (startIndex, sequenceLength);
         return true;
     }
 

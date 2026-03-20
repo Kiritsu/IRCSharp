@@ -54,7 +54,22 @@ public sealed partial class IrcClient
     
     private async Task HandleCapAsync(RawIrcMessage message, CancellationToken cancellationToken)
     {
-        if (message.GetCommand().SequenceEqual("LS"u8))
+        // CAP message format: CAP <client> <subcommand> [params]
+        // The subcommand (LS, ACK, NAK, ...) is the second space-separated token in params, not in the command field.
+        var paramsEnumerator = message.EnumerateParameters();
+        ReadOnlyMemory<byte> subcommand = default;
+        var paramIndex = 0;
+        foreach (var param in paramsEnumerator)
+        {
+            if (paramIndex == 1)
+            {
+                subcommand = param;
+                break;
+            }
+            paramIndex++;
+        }
+
+        if (subcommand.Span.SequenceEqual("LS"u8))
         {
             var serverCapabilities = new List<string>();
 

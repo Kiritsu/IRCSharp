@@ -53,7 +53,7 @@ internal static class IrcMessageExtensions
             
             var parametersRaw = @this.GetParams();
             var parameters = ImmutableArray<string>.Empty;
-            if (!parameters.IsEmpty)
+            if (!parametersRaw.IsEmpty)
             {
                 var builder = ImmutableArray.CreateBuilder<string>(parametersRaw.Count((byte)' ') + 1);
                 var enumerator = new SeparatedByEnumerator(parametersRaw.ToArray(), ' ');
