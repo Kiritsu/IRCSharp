@@ -24,14 +24,14 @@ internal sealed class IrcMessageWriter(Stream stream) : IDisposable, IIrcMessage
 
         try
         {
-            int maxBytes = Encoding.UTF8.GetMaxByteCount(message.Length) + 2;
-            if (maxBytes > maximumMessageSize)
+            int actualBytes = Encoding.UTF8.GetByteCount(message.Span);
+            if (actualBytes + 2 > maximumMessageSize)
             {
                 throw new ArgumentException(
-                    $"Message exceeds max length: {maxBytes} > {maximumMessageSize}");
+                    $"Message exceeds max length: {actualBytes + 2} > {maximumMessageSize}");
             }
-            
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(maxBytes);
+
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetMaxByteCount(message.Length) + 2);
             try
             {
                 int bytesWritten = Encoding.UTF8.GetBytes(message.Span, buffer.AsSpan());
