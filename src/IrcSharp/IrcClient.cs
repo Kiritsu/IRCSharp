@@ -2,6 +2,7 @@
 using System.Collections.Frozen;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using IrcSharp.Events;
 using IrcSharp.Internal;
@@ -31,6 +32,8 @@ public sealed partial class IrcClient : IAsyncDisposable
     private readonly int _port;
     private readonly bool _useSsl;
     private readonly bool _useSslWithNoValidation;
+    private readonly string? _serverCertificateThumbprint;
+    private readonly RemoteCertificateValidationCallback? _remoteCertificateValidationCallback;
     private readonly string _username;
     private readonly string? _password;
     private readonly string? _realname;
@@ -106,6 +109,8 @@ public sealed partial class IrcClient : IAsyncDisposable
         _port = options.Value.Port;
         _useSsl = options.Value.UseSsl;
         _useSslWithNoValidation = options.Value.UseSslWithNoValidation;
+        _serverCertificateThumbprint = options.Value.ServerCertificateThumbprint;
+        _remoteCertificateValidationCallback = options.Value.RemoteCertificateValidationCallback;
         _realname = options.Value.Realname;
         _identd = options.Value.Identd;
         _username = options.Value.Username;
@@ -183,19 +188,42 @@ public sealed partial class IrcClient : IAsyncDisposable
         await this.UserAsync(_identd ?? _username, _realname ?? IrcSharpConsts.DefaultRealname, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
 
-    // todo: make an actual implem
     private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         if (_useSslWithNoValidation)
         {
             return true;
         }
-        
+
+        if (_remoteCertificateValidationCallback != null)
+        {
+            return _remoteCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
+        }
+
+        if (_serverCertificateThumbprint != null)
+        {
+            if (certificate == null)
+            {
+                _logger.LogError("SSL certificate validation failed: no certificate was provided by the server.");
+                return false;
+            }
+
+            var thumbprint = certificate.GetCertHashString(HashAlgorithmName.SHA256);
+            if (thumbprint.Equals(_serverCertificateThumbprint, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            _logger.LogError("SSL certificate thumbprint mismatch. Expected: {Expected}, actual: {Actual}.", _serverCertificateThumbprint, thumbprint);
+            return false;
+        }
+
         if (sslPolicyErrors == SslPolicyErrors.None)
         {
             return true;
         }
 
+        _logger.LogError("SSL certificate validation failed with errors: {Errors}.", sslPolicyErrors);
         return false;
     }
 
