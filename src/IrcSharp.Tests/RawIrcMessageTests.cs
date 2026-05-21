@@ -52,7 +52,7 @@ public sealed class RawIrcMessageTests : IDisposable
     #region GetTags Tests
 
     [Fact]
-    public void GetTags_WithValidTags_ReturnsTagsIncludingAtSymbol()
+    public void GetTags_WithValidTags_ReturnsTagsWithoutAtSymbol()
     {
         // Arrange
         var message = CreateMessage("@key1=value1;key2=value2 COMMAND");
@@ -61,7 +61,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var tags = message.GetTags();
 
         // Assert
-        Assert.Equal("@key1=value1;key2=value2", SpanToString(tags));
+        Assert.Equal("key1=value1;key2=value2", SpanToString(tags));
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var tags = message.GetTags();
 
         // Assert
-        Assert.Equal("@tag1=val1", SpanToString(tags));
+        Assert.Equal("tag1=val1", SpanToString(tags));
     }
 
     #endregion
@@ -108,7 +108,7 @@ public sealed class RawIrcMessageTests : IDisposable
     #region GetPrefix Tests
 
     [Fact]
-    public void GetPrefix_WithValidPrefix_ReturnsPrefixIncludingColon()
+    public void GetPrefix_WithValidPrefix_ReturnsPrefixWithoutColon()
     {
         // Arrange
         var message = CreateMessage(":nick!user@host COMMAND");
@@ -117,7 +117,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var prefix = message.GetPrefix();
 
         // Assert
-        Assert.Equal(":nick!user@host", SpanToString(prefix));
+        Assert.Equal("nick!user@host", SpanToString(prefix));
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var prefix = message.GetPrefix();
 
         // Assert
-        Assert.Equal(":nick!user@host", SpanToString(prefix));
+        Assert.Equal("nick!user@host", SpanToString(prefix));
     }
 
     [Fact]
@@ -506,7 +506,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello world", SpanToString(trailing));
+        Assert.Equal("Hello world", SpanToString(trailing));
     }
 
     [Fact]
@@ -519,7 +519,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello world", SpanToString(trailing));
+        Assert.Equal("Hello world", SpanToString(trailing));
     }
 
     [Fact]
@@ -532,7 +532,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello world", SpanToString(trailing));
+        Assert.Equal("Hello world", SpanToString(trailing));
     }
 
     [Fact]
@@ -545,7 +545,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello world", SpanToString(trailing));
+        Assert.Equal("Hello world", SpanToString(trailing));
     }
 
     [Fact]
@@ -597,7 +597,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello   world   test", SpanToString(trailing));
+        Assert.Equal("Hello   world   test", SpanToString(trailing));
     }
 
     [Fact]
@@ -610,7 +610,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Time is 12:30:45", SpanToString(trailing));
+        Assert.Equal("Time is 12:30:45", SpanToString(trailing));
     }
     
     [Fact]
@@ -623,11 +623,11 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Welcome to the IRC Network", SpanToString(trailing));
+        Assert.Equal("Welcome to the IRC Network", SpanToString(trailing));
     }
 
     [Fact]
-    public void GetTrailing_EmptyTrailing_ReturnsColon()
+    public void GetTrailing_EmptyTrailing_ReturnsEmpty()
     {
         // Arrange
         var message = CreateMessage("PRIVMSG #channel :");
@@ -636,7 +636,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":", SpanToString(trailing));
+        Assert.True(trailing.IsEmpty);
     }
 
     [Fact]
@@ -675,7 +675,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello! @user #hashtag $money & more", SpanToString(trailing));
+        Assert.Equal("Hello! @user #hashtag $money & more", SpanToString(trailing));
     }
 
     [Fact]
@@ -688,7 +688,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Hello 👋 世界 🌍", SpanToString(trailing));
+        Assert.Equal("Hello 👋 世界 🌍", SpanToString(trailing));
     }
 
     [Fact]
@@ -702,7 +702,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal($":{longText}", SpanToString(trailing));
+        Assert.Equal(longText, SpanToString(trailing));
     }
 
     [Fact]
@@ -715,7 +715,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(": Leading space", SpanToString(trailing));
+        Assert.Equal(" Leading space", SpanToString(trailing));
     }
 
     [Fact]
@@ -728,7 +728,7 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal(":Trailing space ", SpanToString(trailing));
+        Assert.Equal("Trailing space ", SpanToString(trailing));
     }
 
     #endregion
@@ -749,11 +749,11 @@ public sealed class RawIrcMessageTests : IDisposable
         var trailing = message.GetTrailing();
 
         // Assert
-        Assert.Equal("@badge=1;color=#FF0000", SpanToString(tags));
-        Assert.Equal(":nick!user@host", SpanToString(prefix));
+        Assert.Equal("badge=1;color=#FF0000", SpanToString(tags));
+        Assert.Equal("nick!user@host", SpanToString(prefix));
         Assert.Equal("PRIVMSG", SpanToString(command));
         Assert.Equal("#channel", SpanToString(parameters));
-        Assert.Equal(":Hello world!", SpanToString(trailing));
+        Assert.Equal("Hello world!", SpanToString(trailing));
     }
 
     [Fact]
@@ -774,7 +774,7 @@ public sealed class RawIrcMessageTests : IDisposable
         Assert.True(prefix.IsEmpty);
         Assert.Equal("COMMAND", SpanToString(command));
         Assert.True(parameters.IsEmpty);
-        Assert.Equal(":trailing text", SpanToString(trailing));
+        Assert.Equal("trailing text", SpanToString(trailing));
     }
 
     #endregion

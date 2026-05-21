@@ -37,16 +37,6 @@ internal sealed class IrcMessageReader(Stream stream) : IAsyncDisposable, IIrcMe
                 
                 var buffer = readResult.Buffer;
 
-                if (buffer.Length > maximumMessageSize)
-                {
-                    var testReader = new SequenceReader<byte>(buffer);
-                    if (!testReader.TryReadTo(out ReadOnlySequence<byte> _, IrcSharpConsts.Crlf))
-                    {
-                        throw new InvalidOperationException(
-                            $"Received {buffer.Length} bytes without finding message delimiter (max: {maximumMessageSize})");
-                    }
-                }
-                
                 while (true)
                 {
                     var sequenceReader = new SequenceReader<byte>(buffer);
@@ -68,6 +58,12 @@ internal sealed class IrcMessageReader(Stream stream) : IAsyncDisposable, IIrcMe
                     yield return message;
                 }
             
+                if (buffer.Length > maximumMessageSize)
+                {
+                    throw new InvalidOperationException(
+                        $"Received {buffer.Length} bytes without finding message delimiter (max: {maximumMessageSize})");
+                }
+
                 _pipeReader.AdvanceTo(buffer.Start, buffer.End);
                 
                 if (readResult.IsCompleted)
