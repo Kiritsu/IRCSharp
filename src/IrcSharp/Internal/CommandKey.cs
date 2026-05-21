@@ -24,7 +24,7 @@ internal readonly struct CommandKey : IEquatable<CommandKey>
         // pack next 8 bytes
         for (int i = 8; i < command.Length && i < 16; i++)
         {
-            _data2 |= (ulong)command[i - 8] << ((i - 8) * 8);
+            _data2 |= (ulong)command[i] << ((i - 8) * 8);
         }
     }
 
